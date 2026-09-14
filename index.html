@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - Pakistan's Premier Freelance Marketplace</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hero-bg { background: linear-gradient(135deg, #05472A 0%, #002B18 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-bold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></span>
+                <span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-medium">5% Low Fee</span>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="hidden md:flex flex-1 max-w-md relative">
+                <input type="text" placeholder="What service are you looking for today?" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent">
+                <button class="absolute right-2 top-2 text-gray-400 hover:text-emerald-700">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex items-center gap-4 text-sm font-medium">
+                <a href="#" class="hidden sm:block text-gray-600 hover:text-emerald-700">Explore Services</a>
+                <a href="#" class="hidden sm:block text-gray-600 hover:text-emerald-700">Become a Seller</a>
+                <a href="#" class="text-gray-700 hover:text-emerald-700">Sign In</a>
+                <a href="#" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors">Join Free</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sub Header Categories -->
+    <div class="bg-white border-b border-gray-200 overflow-x-auto">
+        <div class="max-w-7xl mx-auto px-4 flex gap-6 py-2 text-sm text-gray-600 whitespace-nowrap">
+            <a href="#" class="hover:text-emerald-700 font-medium text-emerald-700 border-b-2 border-emerald-700 pb-1">Web Development</a>
+            <a href="#" class="hover:text-emerald-700 pb-1">Graphics & Design</a>
+            <a href="#" class="hover:text-emerald-700 pb-1">Digital Marketing</a>
+            <a href="#" class="hover:text-emerald-700 pb-1">Writing & Translation</a>
+            <a href="#" class="hover:text-emerald-700 pb-1">Video & Animation</a>
+            <a href="#" class="hover:text-emerald-700 pb-1">AI & Data Entry</a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-bg text-white py-16 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="md:w-1/2 space-y-6">
+                <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight">
+                    Scale Your Business with Top <span class="text-emerald-400">Pakistani Freelancers</span>
+                </h1>
+                <p class="text-gray-300 text-base sm:text-lg">
+                    Direct local escrow payouts via JazzCash, EasyPaisa & Bank Transfer. Lowest market commission (5%).
+                </p>
+                <!-- Hero Search -->
+                <div class="flex bg-white rounded-lg p-1 max-w-lg shadow-lg">
+                    <input type="text" placeholder="Try 'Mobile App Development'" class="flex-1 px-4 py-3 text-gray-800 focus:outline-none text-sm rounded-l-lg">
+                    <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-md text-sm font-semibold flex items-center gap-2">
+                        <i data-lucide="search" class="w-4 h-4"></i> Search
+                    </button>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-gray-300">
+                    <span>Popular:</span>
+                    <span class="border border-emerald-600 px-2 py-1 rounded-full cursor-pointer hover:bg-emerald-800">WordPress</span>
+                    <span class="border border-emerald-600 px-2 py-1 rounded-full cursor-pointer hover:bg-emerald-800">Logo Design</span>
+                    <span class="border border-emerald-600 px-2 py-1 rounded-full cursor-pointer hover:bg-emerald-800">SEO</span>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center">
+                <div class="bg-emerald-950/60 p-6 rounded-2xl border border-emerald-800/50 backdrop-blur max-w-sm w-full space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-emerald-700 rounded-full flex items-center justify-center font-bold text-lg">PK</div>
+                        <div>
+                            <h3 class="font-semibold text-white">Local Escrow Guarantee</h3>
+                            <p class="text-xs text-emerald-300">Secure Payments & Easy Withdrawals</p>
+                        </div>
+                    </div>
+                    <ul class="text-xs space-y-2 text-gray-300 border-t border-emerald-800/50 pt-3">
+                        <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> Flat 5% platform service fee</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> JazzCash / EasyPaisa / Local Bank Payouts</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> Verified Freelancers & Instant Support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Gigs Grid Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Popular Services on PakGig</h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            
+            <!-- Gig Card 1 -->
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=500&q=80" alt="Web Development" class="w-full h-44 object-cover">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center font-semibold text-xs">MA</div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-900">Mehboob Ali</h4>
+                            <p class="text-[10px] text-gray-500">Top Rated Seller</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-gray-800 line-clamp-2 hover:text-emerald-700 cursor-pointer">
+                        I will build a responsive Full-Stack Next.js website with Tailwind CSS
+                    </p>
+                    <div class="flex items-center gap-1 text-xs text-yellow-500 font-semibold">
+                        <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                        <span>4.9</span>
+                        <span class="text-gray-400 font-normal">(128)</span>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
+                        <span class="text-gray-500 uppercase font-semibold">STARTING AT</span>
+                        <span class="text-base font-bold text-gray-900">PKR 15,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gig Card 2 -->
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=500&q=80" alt="Graphic Design" class="w-full h-44 object-cover">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center font-semibold text-xs">SA</div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-900">Sara Ahmed</h4>
+                            <p class="text-[10px] text-emerald-600 font-medium">Level 2 Seller</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-gray-800 line-clamp-2 hover:text-emerald-700 cursor-pointer">
+                        I will design modern minimal logo and brand identity packages
+                    </p>
+                    <div class="flex items-center gap-1 text-xs text-yellow-500 font-semibold">
+                        <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                        <span>5.0</span>
+                        <span class="text-gray-400 font-normal">(84)</span>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
+                        <span class="text-gray-500 uppercase font-semibold">STARTING AT</span>
+                        <span class="text-base font-bold text-gray-900">PKR 5,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gig Card 3 -->
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80" alt="Digital Marketing" class="w-full h-44 object-cover">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-semibold text-xs">UK</div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-900">Usman Khan</h4>
+                            <p class="text-[10px] text-gray-500">Rising Talent</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-gray-800 line-clamp-2 hover:text-emerald-700 cursor-pointer">
+                        I will manage your Facebook & Instagram ads campaigns for targeted leads
+                    </p>
+                    <div class="flex items-center gap-1 text-xs text-yellow-500 font-semibold">
+                        <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                        <span>4.8</span>
+                        <span class="text-gray-400 font-normal">(42)</span>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
+                        <span class="text-gray-500 uppercase font-semibold">STARTING AT</span>
+                        <span class="text-base font-bold text-gray-900">PKR 10,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gig Card 4 -->
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=500&q=80" alt="Flutter Mobile App" class="w-full h-44 object-cover">
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center font-semibold text-xs">ZA</div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-gray-900">Zain Ali</h4>
+                            <p class="text-[10px] text-emerald-600 font-medium">Top Rated Seller</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-medium text-gray-800 line-clamp-2 hover:text-emerald-700 cursor-pointer">
+                        I will develop iOS and Android mobile apps using Flutter and Firebase
+                    </p>
+                    <div class="flex items-center gap-1 text-xs text-yellow-500 font-semibold">
+                        <i data-lucide="star" class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400"></i>
+                        <span>4.9</span>
+                        <span class="text-gray-400 font-normal">(210)</span>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
+                        <span class="text-gray-500 uppercase font-semibold">STARTING AT</span>
+                        <span class="text-base font-bold text-gray-900">PKR 25,000</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-10 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3">Categories</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">Web & IT</a></li>
+                    <li><a href="#" class="hover:text-white">Graphics & Design</a></li>
+                    <li><a href="#" class="hover:text-white">Digital Marketing</a></li>
+                    <li><a href="#" class="hover:text-white">Writing & Content</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3">About</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">About PakGig</a></li>
+                    <li><a href="#" class="hover:text-white">Careers</a></li>
+                    <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                    <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3">Support</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">Help & Support</a></li>
+                    <li><a href="#" class="hover:text-white">Trust & Safety</a></li>
+                    <li><a href="#" class="hover:text-white">Escrow Payment Protection</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-3">Community</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">Pakistani Freelancers Guild</a></li>
+                    <li><a href="#" class="hover:text-white">Events & Meetups</a></li>
+                    <li><a href="#" class="hover:text-white">Blog & Guides</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center text-xs gap-4">
+            <p>© 2026 PakGig Marketplace. All rights reserved.</p>
+            <div class="flex gap-4 text-emerald-500 font-medium">
+                <span>JazzCash Supported</span>
+                <span>•</span>
+                <span>EasyPaisa Supported</span>
+                <span>•</span>
+                <span>Local Bank Transfer</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lucide Icons Script Render -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
