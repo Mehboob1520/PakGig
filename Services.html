@@ -1,8 +1,150 @@
 <!DOCTYPE html>
-<html>
-<head><title>PakGig - Page</title></head>
-<body style="font-family: Arial; text-align: center; padding: 50px;">
-  <h1>PakGig Page</h1>
-  <p><a href="index.html">← Back to Home</a></p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - Explore Freelance Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <a href="index.html" class="text-2xl font-bold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            
+            <!-- Dynamic Live Search -->
+            <div class="flex-1 max-w-lg mx-4">
+                <div class="relative">
+                    <input type="text" id="searchInput" onkeyup="filterServices()" placeholder="Search services (e.g. Web, Logo, SEO)..." class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-sm font-medium">
+                <a href="login.html" class="text-gray-600 hover:text-emerald-700 hidden sm:block">Sign In</a>
+                <a href="signup.html" class="bg-emerald-700 text-white px-4 py-2 rounded-md hover:bg-emerald-800 transition">Join Free</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900">Explore Services</h1>
+                <p class="text-sm text-gray-500 mt-1">Hire top Pakistani talent with local escrow guarantee</p>
+            </div>
+
+            <!-- Category Filter Buttons -->
+            <div class="flex flex-wrap gap-2 text-xs">
+                <button onclick="filterCategory('all')" class="cat-btn bg-emerald-700 text-white px-3 py-1.5 rounded-full font-medium">All Services</button>
+                <button onclick="filterCategory('web')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium">Web & Dev</button>
+                <button onclick="filterCategory('design')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium">Design & Logo</button>
+                <button onclick="filterCategory('marketing')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium">Digital Marketing</button>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div id="servicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Service Card 1 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="web" data-title="responsive web development wordpress react full stack">
+                <div class="h-44 bg-emerald-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Web & App Development</div>
+                <div class="p-5 space-y-3">
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded font-semibold">Web Development</span>
+                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will build a responsive Full-Stack Website or Web App</h3>
+                    <p class="text-xs text-gray-500">Includes React, Tailwind CSS, custom backend, and database setup.</p>
+                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">Escrow Protected</span>
+                        <span class="text-sm font-bold text-emerald-700">PKR 15,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Card 2 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="design" data-title="modern brand identity logo design graphics ui ux">
+                <div class="h-44 bg-blue-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Graphics & Design</div>
+                <div class="p-5 space-y-3">
+                    <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded font-semibold">Graphics & Design</span>
+                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will design modern minimalist logo and brand identity</h3>
+                    <p class="text-xs text-gray-500">Vector source files, high resolution PNGs, and social media kit.</p>
+                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">Escrow Protected</span>
+                        <span class="text-sm font-bold text-emerald-700">PKR 5,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Card 3 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="marketing" data-title="seo organic ranking social media digital marketing traffic">
+                <div class="h-44 bg-indigo-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Digital Marketing & SEO</div>
+                <div class="p-5 space-y-3">
+                    <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded font-semibold">Digital Marketing</span>
+                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will boost your Google SEO ranking & traffic growth</h3>
+                    <p class="text-xs text-gray-500">On-page SEO, high authority backlink strategy, and keyword audit.</p>
+                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">Escrow Protected</span>
+                        <span class="text-sm font-bold text-emerald-700">PKR 10,000</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 PakGig Marketplace. All rights reserved.</p>
+            <p>JazzCash • EasyPaisa • Bank Transfer Payouts</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Search Parameters URL Handling
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
+            if(searchQuery) {
+                document.getElementById('searchInput').value = searchQuery;
+                filterServices();
+            }
+        });
+
+        // Filter Services by Keyword Search
+        function filterServices() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.service-card');
+
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title');
+                if(title.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Filter Services by Category Buttons
+        function filterCategory(category) {
+            const cards = document.querySelectorAll('.service-card');
+            cards.forEach(card => {
+                if(category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>
