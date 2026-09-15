@@ -244,5 +244,81 @@
             }
         });
     </script>
+    <!-- Escrow Payment Modal HTML -->
+<div id="escrowModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+  <div style="background:#fff; width:90%; max-width:480px; padding:25px; border-radius:12px; font-family:sans-serif; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+    
+    <span id="closeModalBtn" style="position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:#666;">&times;</span>
+    
+    <h3 style="margin-top:0; color:#0d6efd; font-size:20px; text-align:center;">PakGig Local Escrow Checkout</h3>
+    <p style="font-size:13px; color:#555; text-align:center; margin-bottom:20px;">
+      Payment aap ke pass mehfooz (Escrow) rahegi jab tak freelancer kaam poora na kare.
+    </p>
+
+    <!-- Account Details Box -->
+    <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px 15px; margin-bottom:15px; font-size:14px; line-height:1.6;">
+      <div style="font-weight:bold; color:#198754; margin-bottom:5px;">📌 Deposit Accounts (PakGig Escrow):</div>
+      <div><b>JazzCash:</b> 03XX-XXXXXXX (PakGig Official)</div>
+      <div><b>EasyPaisa:</b> 03XX-XXXXXXX (PakGig Official)</div>
+      <div><b>Meezan Bank:</b> PKXXMEZN0000XXXXXXXX (PakGig)</div>
+    </div>
+
+    <!-- Submission Form -->
+    <form id="escrowPaymentForm" action="https://formspree.io/f/xqpgvgjp" method="POST" style="display:flex; flex-direction:column; gap:12px;">
+      <div>
+        <label style="font-size:12px; font-weight:bold; color:#333;">Full Name:</label>
+        <input type="text" name="client_name" required placeholder="Aapka Naam" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:bold; color:#333;">Service / Gig Name:</label>
+        <input type="text" id="modalServiceTitle" name="service_title" required readonly style="width:100%; padding:8px; border:1px solid #eee; background:#f0f0f0; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:bold; color:#333;">Payment Method Used:</label>
+        <select name="payment_method" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          <option value="JazzCash">JazzCash</option>
+          <option value="EasyPaisa">EasyPaisa</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:bold; color:#333;">Transaction ID (TID):</label>
+        <input type="text" name="transaction_id" required placeholder="e.g. 012345678912" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:bold; color:#333;">Amount Paid (PKR):</label>
+        <input type="number" name="amount_paid" required placeholder="e.g. 5000" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+      </div>
+
+      <button type="submit" style="background:#198754; color:#fff; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:5px;">
+        Confirm & Submit Escrow Deposit
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<!-- Modal Controlling Script -->
+<script>
+  const modal = document.getElementById('escrowModal');
+  const closeBtn = document.getElementById('closeModalBtn');
+  const serviceInput = document.getElementById('modalServiceTitle');
+
+  function openEscrowModal(serviceTitle) {
+    if (serviceInput) serviceInput.value = serviceTitle || 'General Freelance Service';
+    if (modal) modal.style.display = 'flex';
+  }
+
+  if (closeBtn) {
+    closeBtn.onclick = function() { modal.style.display = 'none'; };
+  }
+  window.onclick = function(event) {
+    if (event.target == modal) { modal.style.display = 'none'; };
+  }
+</script>
 </body>
 </html>
