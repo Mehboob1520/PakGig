@@ -12,86 +12,102 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
+    <!-- Header Navigation -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <a href="index.html" class="text-2xl font-bold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
             
-            <!-- Dynamic Search Bar with Suggestions -->
-            <div class="flex-1 max-w-lg mx-2 sm:mx-4 relative">
-                <input type="text" id="searchInput" oninput="handleSearchInput(event)" onkeydown="handleKeyDown(event)" autocomplete="off" placeholder="Search services (Web, Logo, SEO)..." class="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                
-                <!-- Autocomplete Dropdown List -->
-                <div id="suggestionsDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto">
-                </div>
+            <div class="flex-1 max-w-md relative hidden sm:block">
+                <input type="text" id="searchInput" oninput="handleSearch(event)" placeholder="Search services (Web, Logo, SEO)..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-emerald-600 shadow-sm">
+                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div id="suggestionsDropdown" class="hidden absolute left-0 right-0 top-11 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto"></div>
             </div>
 
-            <div class="flex items-center gap-3 text-sm font-medium">
-                <a href="login.html" class="text-gray-600 hover:text-emerald-700 hidden sm:block">Sign In</a>
-                <a href="signup.html" class="bg-emerald-700 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-emerald-800 transition text-xs sm:text-sm">Join Free</a>
+            <div class="flex items-center space-x-4">
+                <a href="login.html" class="text-sm font-semibold text-gray-700 hover:text-emerald-700">Sign In</a>
+                <a href="signup.html" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded-full transition shadow-sm">Join Free</a>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Explore Services</h1>
-                <p class="text-xs sm:text-sm text-gray-500 mt-1">Hire top Pakistani talent with local escrow guarantee</p>
-            </div>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Explore All Services</h1>
+            <p class="text-gray-600">Find top Pakistani freelance talent for your next project with secure Escrow payment.</p>
+        </div>
 
-            <!-- Category Filter Buttons -->
-            <div class="flex flex-wrap gap-2 text-xs">
-                <button onclick="filterCategory('all', this)" class="cat-btn bg-emerald-700 text-white px-3 py-1.5 rounded-full font-medium transition">All Services</button>
-                <button onclick="filterCategory('web', this)" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Web & Dev</button>
-                <button onclick="filterCategory('design', this)" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Design & Logo</button>
-                <button onclick="filterCategory('marketing', this)" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Digital Marketing</button>
-            </div>
+        <!-- Filter Categories -->
+        <div class="flex flex-wrap gap-2 mb-8">
+            <button onclick="filterCategory('all')" class="cat-btn bg-emerald-700 text-white px-3 py-1.5 rounded-full font-medium transition">All Services</button>
+            <button onclick="filterCategory('web')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Web & App</button>
+            <button onclick="filterCategory('design')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Graphics & Design</button>
+            <button onclick="filterCategory('seo')" class="cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition">Digital Marketing</button>
         </div>
 
         <!-- Services Grid -->
-        <div id="servicesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="servicesGrid">
             
-            <!-- Service Card 1 -->
-            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="web" data-title="responsive web development wordpress react full stack">
-                <div class="h-44 bg-emerald-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Web & App Development</div>
-                <div class="p-5 space-y-3">
-                    <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded font-semibold">Web Development</span>
-                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will build a responsive Full-Stack Website or Web App</h3>
-                    <p class="text-xs text-gray-500">Includes React, Tailwind CSS, custom backend, and database setup.</p>
-                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-                        <span class="text-xs text-gray-400">Escrow Protected</span>
-                        <span class="text-sm font-bold text-emerald-700">PKR 15,000</span>
+            <!-- Card 1 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between" data-category="web">
+                <div>
+                    <div class="h-44 bg-teal-700 flex items-center justify-center text-white font-bold text-xl p-4 text-center">Web & App Development</div>
+                    <div class="p-5">
+                        <span class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Web Development</span>
+                        <h3 class="font-bold text-gray-900 text-lg mt-1">I will build a responsive Full-Stack Website or Web App</h3>
+                        <p class="text-xs text-gray-500 mt-2">Includes React, Tailwind CSS, custom backend, and database setup.</p>
                     </div>
+                </div>
+                <div class="p-5 pt-0 border-t border-gray-100 mt-4 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-emerald-600 font-medium">🛡️ Escrow Protected</span>
+                        <div class="text-lg font-bold text-gray-900">PKR 15,000</div>
+                    </div>
+                    <button onclick="openEscrowModal('Responsive Full-Stack Website or Web App')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2 rounded-lg transition shadow-sm">
+                        Order Now
+                    </button>
                 </div>
             </div>
 
-            <!-- Service Card 2 -->
-            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="design" data-title="modern brand identity logo design graphics ui ux">
-                <div class="h-44 bg-blue-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Graphics & Design</div>
-                <div class="p-5 space-y-3">
-                    <span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded font-semibold">Graphics & Design</span>
-                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will design modern minimalist logo and brand identity</h3>
-                    <p class="text-xs text-gray-500">Vector source files, high resolution PNGs, and social media kit.</p>
-                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-                        <span class="text-xs text-gray-400">Escrow Protected</span>
-                        <span class="text-sm font-bold text-emerald-700">PKR 5,000</span>
+            <!-- Card 2 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between" data-category="design">
+                <div>
+                    <div class="h-44 bg-blue-600 flex items-center justify-center text-white font-bold text-xl p-4 text-center">Graphics & Design</div>
+                    <div class="p-5">
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Graphics & Design</span>
+                        <h3 class="font-bold text-gray-900 text-lg mt-1">I will design modern minimalist logo and brand identity</h3>
+                        <p class="text-xs text-gray-500 mt-2">Vector source files, high resolution PNGs, and social media kit included.</p>
                     </div>
+                </div>
+                <div class="p-5 pt-0 border-t border-gray-100 mt-4 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-emerald-600 font-medium">🛡️ Escrow Protected</span>
+                        <div class="text-lg font-bold text-gray-900">PKR 5,000</div>
+                    </div>
+                    <button onclick="openEscrowModal('Modern Minimalist Logo and Brand Identity')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2 rounded-lg transition shadow-sm">
+                        Order Now
+                    </button>
                 </div>
             </div>
 
-            <!-- Service Card 3 -->
-            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition" data-category="marketing" data-title="seo organic ranking social media digital marketing traffic">
-                <div class="h-44 bg-indigo-900 flex items-center justify-center text-white text-lg font-bold p-4 text-center">Digital Marketing & SEO</div>
-                <div class="p-5 space-y-3">
-                    <span class="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded font-semibold">Digital Marketing</span>
-                    <h3 class="font-bold text-gray-900 text-base leading-snug">I will boost your Google SEO ranking & traffic growth</h3>
-                    <p class="text-xs text-gray-500">On-page SEO, high authority backlink strategy, and keyword audit.</p>
-                    <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-                        <span class="text-xs text-gray-400">Escrow Protected</span>
-                        <span class="text-sm font-bold text-emerald-700">PKR 10,000</span>
+            <!-- Card 3 -->
+            <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between" data-category="seo">
+                <div>
+                    <div class="h-44 bg-indigo-600 flex items-center justify-center text-white font-bold text-xl p-4 text-center">Digital Marketing & SEO</div>
+                    <div class="p-5">
+                        <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Digital Marketing</span>
+                        <h3 class="font-bold text-gray-900 text-lg mt-1">I will boost your Google SEO ranking & traffic growth</h3>
+                        <p class="text-xs text-gray-500 mt-2">On-page SEO, high authority backlinks strategy, and keyword audit.</p>
                     </div>
+                </div>
+                <div class="p-5 pt-0 border-t border-gray-100 mt-4 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-emerald-600 font-medium">🛡️ Escrow Protected</span>
+                        <div class="text-lg font-bold text-gray-900">PKR 10,000</div>
+                    </div>
+                    <button onclick="openEscrowModal('Google SEO Ranking & Traffic Growth')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-4 py-2 rounded-lg transition shadow-sm">
+                        Order Now
+                    </button>
                 </div>
             </div>
 
@@ -99,226 +115,105 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-gray-400 text-xs py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2026 PakGig Marketplace. All rights reserved.</p>
-            <p>JazzCash • EasyPaisa • Bank Transfer Payouts</p>
+    <footer class="bg-gray-900 text-gray-400 text-sm py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>&copy; 2026 PakGig Marketplace. All rights reserved. | JazzCash • EasyPaisa • Bank Transfer Payouts</p>
         </div>
     </footer>
 
-    <script>
-        const suggestionsDatabase = [
-            "Web Development",
-            "Responsive Website",
-            "React Full-Stack App",
-            "WordPress Development",
-            "Logo Design",
-            "Minimalist Brand Identity",
-            "UI/UX Design",
-            "Digital Marketing",
-            "Google SEO Ranking",
-            "Social Media Management",
-            "Backlink Building"
-        ];
-
-        let selectedIndex = -1;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const searchQuery = urlParams.get('search');
-            if(searchQuery) {
-                document.getElementById('searchInput').value = searchQuery;
-                filterServices();
-            }
-        });
-
-        function handleSearchInput(e) {
-            const query = e.target.value.toLowerCase().trim();
-            const dropdown = document.getElementById('suggestionsDropdown');
-            selectedIndex = -1;
-
-            if (!query) {
-                dropdown.classList.add('hidden');
-                filterServices();
-                return;
-            }
-
-            const matches = suggestionsDatabase.filter(item => 
-                item.toLowerCase().includes(query)
-            );
-
-            if (matches.length > 0) {
-                dropdown.innerHTML = matches.map((item, index) => `
-                    <div onclick="selectSuggestion('${item}')" class="suggestion-item px-4 py-2.5 text-xs text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center justify-between" data-index="${index}">
-                        <span>${item}</span>
-                        <span class="text-[10px] text-gray-400">Suggest</span>
-                    </div>
-                `).join('');
-                dropdown.classList.remove('hidden');
-            } else {
-                dropdown.classList.add('hidden');
-            }
-
-            filterServices();
-        }
-
-        function selectSuggestion(text) {
-            const input = document.getElementById('searchInput');
-            input.value = text;
-            document.getElementById('suggestionsDropdown').classList.add('hidden');
-            filterServices();
-        }
-
-        function handleKeyDown(e) {
-            const dropdown = document.getElementById('suggestionsDropdown');
-            const items = dropdown.querySelectorAll('.suggestion-item');
-
-            if (dropdown.classList.contains('hidden') || items.length === 0) return;
-
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selectedIndex = (selectedIndex + 1) % items.length;
-                updateSelection(items);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-                updateSelection(items);
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                if (selectedIndex >= 0 && items[selectedIndex]) {
-                    items[selectedIndex].click();
-                }
-            } else if (e.key === 'Escape') {
-                dropdown.classList.add('hidden');
-            }
-        }
-
-        function updateSelection(items) {
-            items.forEach((item, index) => {
-                if (index === selectedIndex) {
-                    item.classList.add('bg-emerald-50', 'text-emerald-700', 'font-semibold');
-                    item.scrollIntoView({ block: 'nearest' });
-                } else {
-                    item.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-semibold');
-                }
-            });
-        }
-
-        function filterServices() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.service-card');
-
-            cards.forEach(card => {
-                const title = card.getAttribute('data-title');
-                if(title.includes(query)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function filterCategory(category, btn) {
-            const cards = document.querySelectorAll('.service-card');
-            const buttons = document.querySelectorAll('.cat-btn');
-
-            buttons.forEach(b => {
-                b.className = "cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition";
-            });
-            btn.className = "cat-btn bg-emerald-700 text-white px-3 py-1.5 rounded-full font-medium transition";
-
-            cards.forEach(card => {
-                if(category === 'all' || card.getAttribute('data-category') === category) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        document.addEventListener('click', (e) => {
-            const searchInput = document.getElementById('searchInput');
-            const dropdown = document.getElementById('suggestionsDropdown');
-            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-    </script>
     <!-- Escrow Payment Modal HTML -->
-<div id="escrowModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
-  <div style="background:#fff; width:90%; max-width:480px; padding:25px; border-radius:12px; font-family:sans-serif; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
-    
-    <span id="closeModalBtn" style="position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:#666;">&times;</span>
-    
-    <h3 style="margin-top:0; color:#0d6efd; font-size:20px; text-align:center;">PakGig Local Escrow Checkout</h3>
-    <p style="font-size:13px; color:#555; text-align:center; margin-bottom:20px;">
-      Payment aap ke pass mehfooz (Escrow) rahegi jab tak freelancer kaam poora na kare.
-    </p>
+    <div id="escrowModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+      <div style="background:#fff; width:90%; max-width:480px; padding:25px; border-radius:12px; font-family:sans-serif; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+        
+        <span id="closeModalBtn" style="position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:#666;">&times;</span>
+        
+        <h3 style="margin-top:0; color:#0d6efd; font-size:20px; text-align:center;">PakGig Local Escrow Checkout</h3>
+        <p style="font-size:13px; color:#555; text-align:center; margin-bottom:20px;">
+          Payment aap ke pass mehfooz (Escrow) rahegi jab tak freelancer kaam poora na kare.
+        </p>
 
-    <!-- Account Details Box -->
-    <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px 15px; margin-bottom:15px; font-size:14px; line-height:1.6;">
-      <div style="font-weight:bold; color:#198754; margin-bottom:5px;">📌 Deposit Accounts (PakGig Escrow):</div>
-      <div><b>JazzCash:</b> 03XX-XXXXXXX (PakGig Official)</div>
-      <div><b>EasyPaisa:</b> 03XX-XXXXXXX (PakGig Official)</div>
-      <div><b>Meezan Bank:</b> PKXXMEZN0000XXXXXXXX (PakGig)</div>
+        <!-- Account Details Box -->
+        <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px 15px; margin-bottom:15px; font-size:14px; line-height:1.6;">
+          <div style="font-weight:bold; color:#198754; margin-bottom:5px;">📌 Deposit Accounts (PakGig Escrow):</div>
+          <div><b>JazzCash:</b> 03XX-XXXXXXX (PakGig Official)</div>
+          <div><b>EasyPaisa:</b> 03XX-XXXXXXX (PakGig Official)</div>
+          <div><b>Meezan Bank:</b> PKXXMEZN0000XXXXXXXX (PakGig)</div>
+        </div>
+
+        <!-- Submission Form -->
+        <form id="escrowPaymentForm" action="https://formspree.io/f/xqpgvgjp" method="POST" style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:#333;">Full Name:</label>
+            <input type="text" name="client_name" required placeholder="Aapka Naam" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:#333;">Service / Gig Name:</label>
+            <input type="text" id="modalServiceTitle" name="service_title" required readonly style="width:100%; padding:8px; border:1px solid #eee; background:#f0f0f0; border-radius:6px; box-sizing:border-box;">
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:#333;">Payment Method Used:</label>
+            <select name="payment_method" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+              <option value="JazzCash">JazzCash</option>
+              <option value="EasyPaisa">EasyPaisa</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:#333;">Transaction ID (TID):</label>
+            <input type="text" name="transaction_id" required placeholder="e.g. 012345678912" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:bold; color:#333;">Amount Paid (PKR):</label>
+            <input type="number" name="amount_paid" required placeholder="e.g. 5000" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          </div>
+
+          <button type="submit" style="background:#198754; color:#fff; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:5px;">
+            Confirm & Submit Escrow Deposit
+          </button>
+        </form>
+
+      </div>
     </div>
 
-    <!-- Submission Form -->
-    <form id="escrowPaymentForm" action="https://formspree.io/f/xqpgvgjp" method="POST" style="display:flex; flex-direction:column; gap:12px;">
-      <div>
-        <label style="font-size:12px; font-weight:bold; color:#333;">Full Name:</label>
-        <input type="text" name="client_name" required placeholder="Aapka Naam" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
-      </div>
+    <!-- Scripting for Modal and Features -->
+    <script>
+      const modal = document.getElementById('escrowModal');
+      const closeBtn = document.getElementById('closeModalBtn');
+      const serviceInput = document.getElementById('modalServiceTitle');
 
-      <div>
-        <label style="font-size:12px; font-weight:bold; color:#333;">Service / Gig Name:</label>
-        <input type="text" id="modalServiceTitle" name="service_title" required readonly style="width:100%; padding:8px; border:1px solid #eee; background:#f0f0f0; border-radius:6px; box-sizing:border-box;">
-      </div>
+      function openEscrowModal(serviceTitle) {
+        if (serviceInput) serviceInput.value = serviceTitle || 'General Freelance Service';
+        if (modal) modal.style.display = 'flex';
+      }
 
-      <div>
-        <label style="font-size:12px; font-weight:bold; color:#333;">Payment Method Used:</label>
-        <select name="payment_method" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
-          <option value="JazzCash">JazzCash</option>
-          <option value="EasyPaisa">EasyPaisa</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-        </select>
-      </div>
+      if (closeBtn) {
+        closeBtn.onclick = function() { modal.style.display = 'none'; };
+      }
+      window.onclick = function(event) {
+        if (event.target == modal) { modal.style.display = 'none'; };
+      }
 
-      <div>
-        <label style="font-size:12px; font-weight:bold; color:#333;">Transaction ID (TID):</label>
-        <input type="text" name="transaction_id" required placeholder="e.g. 012345678912" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
-      </div>
+      // Filter Logic
+      function filterCategory(cat) {
+        const cards = document.querySelectorAll('.service-card');
+        const btns = document.querySelectorAll('.cat-btn');
+        btns.forEach(b => {
+          b.className = "cat-btn bg-white border border-gray-300 text-gray-700 hover:border-emerald-600 px-3 py-1.5 rounded-full font-medium transition";
+        });
+        event.target.className = "cat-btn bg-emerald-700 text-white px-3 py-1.5 rounded-full font-medium transition";
 
-      <div>
-        <label style="font-size:12px; font-weight:bold; color:#333;">Amount Paid (PKR):</label>
-        <input type="number" name="amount_paid" required placeholder="e.g. 5000" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
-      </div>
-
-      <button type="submit" style="background:#198754; color:#fff; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:5px;">
-        Confirm & Submit Escrow Deposit
-      </button>
-    </form>
-
-  </div>
-</div>
-
-<!-- Modal Controlling Script -->
-<script>
-  const modal = document.getElementById('escrowModal');
-  const closeBtn = document.getElementById('closeModalBtn');
-  const serviceInput = document.getElementById('modalServiceTitle');
-
-  function openEscrowModal(serviceTitle) {
-    if (serviceInput) serviceInput.value = serviceTitle || 'General Freelance Service';
-    if (modal) modal.style.display = 'flex';
-  }
-
-  if (closeBtn) {
-    closeBtn.onclick = function() { modal.style.display = 'none'; };
-  }
-  window.onclick = function(event) {
-    if (event.target == modal) { modal.style.display = 'none'; };
-  }
-</script>
+        cards.forEach(card => {
+          if(cat === 'all' || card.getAttribute('data-category') === cat) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+    </script>
 </body>
 </html>
