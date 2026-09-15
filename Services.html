@@ -13,7 +13,7 @@
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
     <!-- Header Navigation -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <a href="index.html" class="text-2xl font-bold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
             
@@ -121,20 +121,20 @@
         </div>
     </footer>
 
-    <!-- Single Clean Escrow Payment Modal -->
-    <div id="escrowModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; overflow-y:auto; padding:20px 0;">
-      <div style="background:#fff; width:90%; max-width:480px; padding:25px; border-radius:12px; font-family:sans-serif; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto;">
+    <!-- Fixed Fixed Layout Escrow Payment Modal -->
+    <div id="escrowModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;">
+      <div style="background:#ffffff; width:100%; max-width:480px; padding:24px; border-radius:12px; font-family:sans-serif; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto; box-sizing:border-box; text-align:left;">
         
-        <span id="closeModalBtn" style="position:absolute; top:12px; right:16px; font-size:24px; cursor:pointer; color:#666; font-weight:bold;">&times;</span>
+        <span id="closeModalBtn" style="position:absolute; top:12px; right:16px; font-size:26px; cursor:pointer; color:#555; font-weight:bold; line-height:1;">&times;</span>
         
-        <h3 style="margin-top:0; color:#0d6efd; font-size:20px; text-align:center;">PakGig Local Escrow Checkout</h3>
-        <p style="font-size:13px; color:#555; text-align:center; margin-bottom:15px;">
+        <h3 style="margin:0 0 8px 0; color:#0d6efd; font-size:20px; font-weight:bold; text-align:center;">PakGig Local Escrow Checkout</h3>
+        <p style="font-size:13px; color:#555; text-align:center; margin:0 0 16px 0;">
           Payment aap ke pass mehfooz (Escrow) rahegi jab tak freelancer kaam poora na kare.
         </p>
 
         <!-- Account Details Box -->
-        <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px 15px; margin-bottom:15px; font-size:13px; line-height:1.6;">
-          <div style="font-weight:bold; color:#198754; margin-bottom:5px;">📌 Deposit Accounts (PakGig Escrow):</div>
+        <div style="background:#f8f9fa; border:1px solid #e9ecef; border-radius:8px; padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.6; color:#333;">
+          <div style="font-weight:bold; color:#198754; margin-bottom:4px;">📌 Deposit Accounts (PakGig Escrow):</div>
           <div><b>Account Title:</b> Mehboob Alam</div>
           <div><b>EasyPaisa:</b> 03444466927</div>
           <div><b>JazzCash:</b> 03327002220</div>
@@ -142,37 +142,37 @@
         </div>
 
         <!-- Submission Form -->
-        <form id="escrowPaymentForm" action="https://formspree.io/f/xqpgvgjp" method="POST" style="display:flex; flex-direction:column; gap:12px;">
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:#333;">Full Name:</label>
-            <input type="text" name="client_name" required placeholder="Aapka Naam" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+        <form id="escrowPaymentForm" action="https://formspree.io/f/xqpgvgjp" method="POST" style="display:block;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px;">Full Name:</label>
+            <input type="text" name="client_name" required placeholder="Aapka Naam" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:14px;">
           </div>
 
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:#333;">Service / Gig Name:</label>
-            <input type="text" id="modalServiceTitle" name="service_title" required readonly style="width:100%; padding:8px; border:1px solid #eee; background:#f0f0f0; border-radius:6px; box-sizing:border-box;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px;">Service / Gig Name:</label>
+            <input type="text" id="modalServiceTitle" name="service_title" required readonly style="width:100%; padding:8px 10px; border:1px solid #ddd; background:#f3f4f6; border-radius:6px; box-sizing:border-box; font-size:14px;">
           </div>
 
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:#333;">Payment Method Used:</label>
-            <select name="payment_method" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px;">Payment Method Used:</label>
+            <select name="payment_method" required style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:14px; background:#fff;">
               <option value="JazzCash">JazzCash</option>
               <option value="EasyPaisa">EasyPaisa</option>
               <option value="Bank Transfer (UBL)">Bank Transfer (UBL)</option>
             </select>
           </div>
 
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:#333;">Transaction ID (TID):</label>
-            <input type="text" name="transaction_id" required placeholder="e.g. 012345678912" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px;">Transaction ID (TID):</label>
+            <input type="text" name="transaction_id" required placeholder="e.g. 012345678912" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:14px;">
           </div>
 
-          <div>
-            <label style="font-size:12px; font-weight:bold; color:#333;">Amount Paid (PKR):</label>
-            <input type="number" name="amount_paid" required placeholder="e.g. 5000" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:12px; font-weight:bold; color:#333; margin-bottom:4px;">Amount Paid (PKR):</label>
+            <input type="number" name="amount_paid" required placeholder="e.g. 5000" style="width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:14px;">
           </div>
 
-          <button type="submit" style="background:#198754; color:#fff; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:5px;">
+          <button type="submit" style="width:100%; background:#198754; color:#ffffff; padding:10px 15px; border:none; border-radius:6px; font-weight:bold; font-size:14px; cursor:pointer;">
             Confirm & Submit Escrow Deposit
           </button>
         </form>
