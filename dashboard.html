@@ -337,6 +337,43 @@
       <button id="submitWithdraw" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Confirm Withdrawal</button>
     </div>
   </div>
-  </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const withdrawBtn = document.querySelector("button:contains('Withdraw Funds')") || 
+                        Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Withdraw"));
+
+    if (withdrawBtn) {
+      withdrawBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        // Target Elements
+        const balanceEl = document.querySelector(".text-2xl, .font-bold") || document.body;
+        const historyTable = document.querySelector("table tbody") || document.querySelector(".Transaction\\ History, table");
+
+        // Simple prompt for withdrawal amount
+        const amount = prompt("Withdrawal amount enter karein (PKR):", "10000");
+
+        if (amount && !isNaN(amount) && Number(amount) > 0) {
+          alert(`Success! PKR ${amount} withdrawal request submit ho gayi hai.`);
+          
+          // Add row to Transaction History if table exists
+          const tableBody = document.querySelector("tbody");
+          if (tableBody) {
+            const today = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            const newRow = `
+              <tr>
+                <td class="py-2">${today}</td>
+                <td class="py-2">Withdrawal Request</td>
+                <td class="py-2 text-red-600">- PKR ${Number(amount).toLocaleString()}</td>
+                <td class="py-2">Payout</td>
+              </tr>
+            `;
+            tableBody.insertAdjacentHTML('afterbegin', newRow);
+          }
+        }
+      });
+    }
+  });
+</script>
 </body>
 </html>
