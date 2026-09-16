@@ -105,6 +105,7 @@
                 alertBox.innerHTML = `Welcome ${name}! Account created successfully. Redirecting to Login...`;
 
                 setTimeout(() => {
+                    localStorage.setItem("userLoggedIn", "true");
                     window.location.href = "login.html";
                 }, 1500);
             }, 1000);
