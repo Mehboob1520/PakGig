@@ -71,6 +71,7 @@
                 alertBox.innerHTML = "Logged in successfully! Redirecting...";
 
                 setTimeout(() => {
+                    localStorage.setItem("userLoggedIn", "true");
                     window.location.href = "Services.html";
                 }, 1200);
             }, 1000);
