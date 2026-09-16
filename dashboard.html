@@ -203,7 +203,7 @@
               </select>
             </div>
 
-            <button class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">
+            <button onclick="document.getElementById('withdrawModal').style.display='block'" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">Withdraw Funds</button>
               Withdraw Funds
             </button>
           </div>
@@ -320,8 +320,7 @@
   </style>
 
   <div id="withdrawModal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" id="closeModal">&times;</span>
+    <span onclick="document.getElementById('withdrawModal').style.display='none'" class="close-btn" id="closeModal" style="cursor:pointer; position:absolute; right:16px; top:12px; font-size:24px;">&times;</span>
       <h3>Withdraw Funds</h3>
       <p>Available Balance: <strong>PKR 45,000</strong></p>
       <label>Payment Method:</label>
