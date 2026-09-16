@@ -338,42 +338,61 @@
     </div>
   </div>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const withdrawBtn = document.querySelector("button:contains('Withdraw Funds')") || 
-                        Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Withdraw"));
+ <!-- Withdraw Modal -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Modal aur elements collect karein
+  const modal = document.getElementById("withdrawModal");
+  const closeModal = document.getElementById("closeModal");
+  const submitBtn = document.getElementById("submitWithdraw");
 
-    if (withdrawBtn) {
-      withdrawBtn.addEventListener("click", function (e) {
-        e.preventDefault();
+  // Pura page me har wo button dhoondhein jis par 'Withdraw' likha ho
+  const buttons = Array.from(document.querySelectorAll("button, a"));
+  const withdrawBtn = buttons.find(b => b.textContent.trim().toLowerCase().includes("withdraw"));
 
-        // Target Elements
-        const balanceEl = document.querySelector(".text-2xl, .font-bold") || document.body;
-        const historyTable = document.querySelector("table tbody") || document.querySelector(".Transaction\\ History, table");
-
-        // Simple prompt for withdrawal amount
-        const amount = prompt("Withdrawal amount enter karein (PKR):", "10000");
-
+  if (withdrawBtn) {
+    withdrawBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (modal) {
+        modal.style.display = "block";
+      } else {
+        // Agar modal HTML me na mile, to prompt fallback
+        const amount = prompt("Enter withdrawal amount (PKR):", "10000");
         if (amount && !isNaN(amount) && Number(amount) > 0) {
-          alert(`Success! PKR ${amount} withdrawal request submit ho gayi hai.`);
-          
-          // Add row to Transaction History if table exists
-          const tableBody = document.querySelector("tbody");
-          if (tableBody) {
-            const today = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-            const newRow = `
-              <tr>
-                <td class="py-2">${today}</td>
-                <td class="py-2">Withdrawal Request</td>
-                <td class="py-2 text-red-600">- PKR ${Number(amount).toLocaleString()}</td>
-                <td class="py-2">Payout</td>
-              </tr>
-            `;
-            tableBody.insertAdjacentHTML('afterbegin', newRow);
-          }
+          alert("Success! PKR " + amount + " withdrawal request submitted successfully.");
         }
-      });
+      }
+    });
+  }
+
+  if (closeModal && modal) {
+    closeModal.addEventListener("click", function () {
+      modal.style.display = "none";
+    });
+  }
+
+  // Close modal when clicking outside content
+  window.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      modal.style.display = "none";
     }
   });
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const amountInput = document.getElementById("withdrawAmount");
+      const amount = amountInput ? amountInput.value : "";
+      if (amount && Number(amount) > 0) {
+        alert("Success! PKR " + amount + " withdrawal request submitted.");
+        if (modal) modal.style.display = "none";
+      } else {
+        alert("Please enter a valid amount.");
+      }
+    });
+  }
+});
+</script>
 </script>
 </body>
 </html>
