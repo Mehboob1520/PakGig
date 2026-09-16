@@ -278,6 +278,65 @@
       activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
       activeBtn.classList.add('border-emerald-700', 'text-emerald-700', 'font-semibold');
     }
+    // --- Withdraw Funds JavaScript ---
+    document.addEventListener('DOMContentLoaded', () => {
+      let availableBalance = 45000;
+      const withdrawBtn = document.querySelector('.PayoutAccount button') || document.getElementById('withdraw-btn');
+      const modal = document.getElementById('withdrawModal');
+      const closeModal = document.getElementById('closeModal');
+      const submitBtn = document.getElementById('submitWithdraw');
+
+      if(withdrawBtn && modal) {
+        withdrawBtn.addEventListener('click', () => { modal.style.display = 'block'; });
+        closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
+      }
+
+      if(submitBtn) {
+        submitBtn.addEventListener('click', () => {
+          const amount = parseFloat(document.getElementById('withdrawAmount').value);
+          const accNo = document.getElementById('accountNumber').value;
+          const method = document.getElementById('payoutMethod').value;
+
+          if (!accNo) { alert('براہ کرم اپنا اکاؤنٹ نمبر درج کریں۔'); return; }
+          if (isNaN(amount) || amount < 1000) { alert('کم از کم ود ڈرا کی رقم PKR 1,000 ہونی چاہیے۔'); return; }
+          if (amount > availableBalance) { alert('آپ کی درخواست کی رقم دستیاب بیلنس سے زیادہ ہے۔'); return; }
+
+          availableBalance -= amount;
+          const balanceEl = document.querySelector('.PayoutAccount h2');
+          if(balanceEl) balanceEl.innerText = `PKR ${availableBalance.toLocaleString()}`;
+
+          alert('ود ڈرا کی درخواست کامیابی سے جمع ہو گئی ہے!');
+          modal.style.display = 'none';
+        });
+      }
+    });
+  </script>
+
+  <!-- --- Withdraw Modal HTML & CSS --- -->
+  <style>
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: #fff; margin: 10% auto; padding: 24px; width: 90%; max-width: 400px; border-radius: 8px; position: relative; }
+    .close-btn { position: absolute; right: 16px; top: 12px; font-size: 24px; cursor: pointer; }
+  </style>
+
+  <div id="withdrawModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeModal">&times;</span>
+      <h3>Withdraw Funds</h3>
+      <p>Available Balance: <strong>PKR 45,000</strong></p>
+      <label>Payment Method:</label>
+      <select id="payoutMethod">
+        <option value="JazzCash">JazzCash</option>
+        <option value="EasyPaisa">EasyPaisa</option>
+      </select>
+      <br><br>
+      <label>Account Number:</label>
+      <input type="text" id="accountNumber" placeholder="03001234567" style="width: 100%; margin-bottom: 10px;">
+      <label>Amount (PKR):</label>
+      <input type="number" id="withdrawAmount" placeholder="e.g. 5000" style="width: 100%; margin-bottom: 10px;">
+      <button id="submitWithdraw" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Confirm Withdrawal</button>
+    </div>
+  </div>
   </script>
 </body>
 </html>
