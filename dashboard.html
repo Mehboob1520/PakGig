@@ -6,15 +6,19 @@
   <title>Dashboard - PakGig</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <a href="index.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">PakGig</a>
-      
       <div class="flex items-center space-x-6">
-        <a href="Services.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Services</a>
+        <a href="index.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">PakGig</a>
+        <nav class="hidden md:flex space-x-4">
+          <a href="Services.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Services</a>
+        </nav>
+      </div>
+      
+      <div class="flex items-center space-x-4">
         <button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Logout</button>
         <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
           M
@@ -23,44 +27,227 @@
     </div>
   </header>
 
-  <!-- Dashboard Main Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900">Welcome Back, Freelancer!</h1>
-      <p class="text-sm text-gray-500">Manage your services, active orders, and earnings here.</p>
+  <!-- Dashboard Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+    
+    <!-- Welcome Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Welcome Back, Mehboob!</h1>
+        <p class="text-sm text-gray-500">Manage your freelancing activities, active orders, and earnings.</p>
+      </div>
+      <a href="Services.html" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">
+        + Create New Gig
+      </a>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Orders</p>
-        <p class="text-3xl font-extrabold text-gray-900 mt-2">3</p>
+    <!-- Navigation Tabs -->
+    <div class="border-b border-gray-200 mb-8">
+      <nav class="flex space-x-8" aria-label="Tabs">
+        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn border-emerald-700 text-emerald-700 pb-4 px-1 border-b-2 font-semibold text-sm">
+          Overview
+        </button>
+        <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
+          My Orders
+        </button>
+        <button onclick="switchTab('gigs')" id="tab-gigs" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
+          My Services
+        </button>
+        <button onclick="switchTab('earnings')" id="tab-earnings" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
+          Earnings & Payouts
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="content-overview" class="tab-content">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Orders</p>
+          <p class="text-3xl font-extrabold text-gray-900 mt-2">3</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completed Orders</p>
+          <p class="text-3xl font-extrabold text-gray-900 mt-2">14</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Clearance</p>
+          <p class="text-3xl font-extrabold text-amber-600 mt-2">PKR 12,500</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Available Balance</p>
+          <p class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p>
+        </div>
       </div>
-      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completed Gigs</p>
-        <p class="text-3xl font-extrabold text-gray-900 mt-2">12</p>
-      </div>
-      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Earnings</p>
-        <p class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p>
+
+      <!-- Recent Orders Summary -->
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-900">Recent Active Orders</h2>
+          <button onclick="switchTab('orders')" class="text-xs font-semibold text-emerald-700 hover:underline">View All</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
+              <tr>
+                <th class="py-3 px-4">Buyer</th>
+                <th class="py-3 px-4">Gig Title</th>
+                <th class="py-3 px-4">Due Date</th>
+                <th class="py-3 px-4">Amount</th>
+                <th class="py-3 px-4">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr>
+                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
+                <td class="py-3 px-4">Full Stack E-Commerce Store Development</td>
+                <td class="py-3 px-4">Sep 20, 2026</td>
+                <td class="py-3 px-4 font-semibold text-gray-900">PKR 25,000</td>
+                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4 font-medium text-gray-900">Hamza Khan</td>
+                <td class="py-3 px-4">Custom Tailwind CSS Dashboard UI</td>
+                <td class="py-3 px-4">Sep 18, 2026</td>
+                <td class="py-3 px-4 font-semibold text-gray-900">PKR 8,000</td>
+                <td class="py-3 px-4"><span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Review Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- Active Gigs / Services -->
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold text-gray-900">Your Posted Services</h2>
-        <a href="Services.html" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded-lg">Add New Gig</a>
-      </div>
-      <div class="border-t border-gray-100 pt-4 text-sm text-gray-500">
-        You currently have active gigs listed on the marketplace.
+    <!-- TAB 2: MY ORDERS -->
+    <div id="content-orders" class="tab-content hidden">
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Manage All Orders</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
+              <tr>
+                <th class="py-3 px-4">Order ID</th>
+                <th class="py-3 px-4">Buyer</th>
+                <th class="py-3 px-4">Gig</th>
+                <th class="py-3 px-4">Price</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr>
+                <td class="py-3 px-4 font-mono text-xs">#PKG-8092</td>
+                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
+                <td class="py-3 px-4">E-Commerce Store Development</td>
+                <td class="py-3 px-4 font-semibold">PKR 25,000</td>
+                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
+                <td class="py-3 px-4"><button class="text-xs bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800">Deliver Work</button></td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4 font-mono text-xs">#PKG-7811</td>
+                <td class="py-3 px-4 font-medium text-gray-900">Sara Ahmed</td>
+                <td class="py-3 px-4">Logo & Branding Package</td>
+                <td class="py-3 px-4 font-semibold">PKR 5,000</td>
+                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span></td>
+                <td class="py-3 px-4"><button class="text-xs text-gray-500 hover:underline">View Details</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
+
+    <!-- TAB 3: MY SERVICES / GIGS -->
+    <div id="content-gigs" class="tab-content hidden">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Gig Card 1 -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between">
+          <div class="p-5">
+            <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase">Active</span>
+            <h3 class="text-base font-bold text-gray-900 mt-3">Full Stack Web Application Development in React & Node</h3>
+            <p class="text-xs text-gray-500 mt-2">Starting at <span class="text-sm font-bold text-gray-900">PKR 15,000</span></p>
+          </div>
+          <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex items-center justify-between text-xs">
+            <span class="text-gray-500">Impressions: 1,240</span>
+            <div class="space-x-2">
+              <button class="text-emerald-700 font-semibold hover:underline">Edit</button>
+              <button class="text-red-600 font-semibold hover:underline">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: EARNINGS & PAYOUTS -->
+    <div id="content-earnings" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Balance Summary -->
+        <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">Payout Account</h2>
+          <p class="text-xs text-gray-500 mb-6">Withdraw your net earnings to your preferred local Pakistani bank account or mobile wallet.</p>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Available for Withdrawal</label>
+              <p class="text-2xl font-extrabold text-emerald-600">PKR 45,000</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Select Payment Method</label>
+              <select class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <option>JazzCash / EasyPaisa</option>
+                <option>Local Bank Transfer (IBAN)</option>
+                <option>NayaPay / SadaPay</option>
+              </select>
+            </div>
+
+            <button class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">
+              Withdraw Funds
+            </button>
+          </div>
+        </div>
+
+        <!-- Earnings History -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h2 class="text-lg font-bold text-gray-900 mb-4">Transaction History</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-gray-600">
+              <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
+                <tr>
+                  <th class="py-3 px-4">Date</th>
+                  <th class="py-3 px-4">Description</th>
+                  <th class="py-3 px-4">Amount</th>
+                  <th class="py-3 px-4">Type</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr>
+                  <td class="py-3 px-4">Sep 10, 2026</td>
+                  <td class="py-3 px-4">Order #PKG-7811 Cleared</td>
+                  <td class="py-3 px-4 font-semibold text-emerald-600">+ PKR 4,750</td>
+                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Credit</td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-4">Sep 01, 2026</td>
+                  <td class="py-3 px-4">Withdrawal to JazzCash</td>
+                  <td class="py-3 px-4 font-semibold text-red-600">- PKR 10,000</td>
+                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
-  <!-- Auth Script & Logout Logic -->
+  <!-- Script for Tab Switching & Security -->
   <script>
-    // Security Guard: Check if logged in
+    // Security Guard: Check if user is logged in
     const isLoggedIn = localStorage.getItem("userLoggedIn");
     if (isLoggedIn !== "true") {
       window.location.href = "login.html";
@@ -71,6 +258,26 @@
       localStorage.removeItem("userLoggedIn");
       window.location.href = "index.html";
     });
+
+    // Tab Switcher Logic
+    function switchTab(tabName) {
+      // Hide all contents
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      
+      // Reset all tab button styles
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-emerald-700', 'text-emerald-700', 'font-semibold');
+        btn.classList.add('border-transparent', 'text-gray-500', 'font-medium');
+      });
+
+      // Show active content
+      document.getElementById('content-' + tabName).classList.remove('hidden');
+
+      // Highlight active tab button
+      const activeBtn = document.getElementById('tab-' + tabName);
+      activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
+      activeBtn.classList.add('border-emerald-700', 'text-emerald-700', 'font-semibold');
+    }
   </script>
 </body>
 </html>
