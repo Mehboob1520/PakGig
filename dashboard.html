@@ -368,6 +368,50 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 }); 
-</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const withdrawBtn = document.querySelector(".withdraw-btn") || Array.from(document.querySelectorAll("button")).find(el => el.textContent.includes("Withdraw Funds"));
+    const modal = document.getElementById("withdrawModal");
+    const closeBtn = document.getElementById("closeModal");
+    const submitBtn = document.getElementById("submitwithdraw");
+
+    if (withdrawBtn && modal) {
+      withdrawBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        modal.style.display = "flex";
+      });
+    }
+
+    if (closeBtn && modal) {
+      closeBtn.addEventListener("click", function () {
+        modal.style.display = "none";
+      });
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener("click", function () {
+        const amount = document.getElementById("withdrawAmount").value;
+        const method = document.getElementById("payoutMethod").value;
+        const accountNum = document.getElementById("accountNumber").value;
+
+        if (!amount || !accountNum) {
+          alert("براہ کرم تمام معلومات درج کریں!");
+          return;
+        }
+
+        alert(`آپ کی ${amount} PKR کی درخواست ${method} کے لیے کامیابی سے جمع ہو گئی ہے!`);
+        if (modal) {
+          modal.style.display = "none";
+        }
+      });
+    }
+
+    window.addEventListener("click", function (e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+  });
+        </script>
 </body>
 </html>
