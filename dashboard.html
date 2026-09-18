@@ -5,10 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - PakGig</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,.5);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal.show { display: flex; }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Header -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-6">
@@ -17,51 +29,32 @@
           <a href="Services.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Services</a>
         </nav>
       </div>
-      
       <div class="flex items-center space-x-4">
-        <button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Logout</button>
-        <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
-          M
-        </div>
+        <button id="logout-btn" type="button" class="text-sm font-semibold text-red-600 hover:text-red-800">Logout</button>
+        <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">M</div>
       </div>
     </div>
   </header>
 
-  <!-- Dashboard Container -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-    
-    <!-- Welcome Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Welcome Back, Mehboob!</h1>
         <p class="text-sm text-gray-500">Manage your freelancing activities, active orders, and earnings.</p>
       </div>
-      <a href="Services.html" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">
-        + Create New Gig
-      </a>
+      <a href="Services.html" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">+ Create New Gig</a>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="border-b border-gray-200 mb-8">
-      <nav class="flex space-x-8" aria-label="Tabs">
-        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn border-emerald-700 text-emerald-700 pb-4 px-1 border-b-2 font-semibold text-sm">
-          Overview
-        </button>
-        <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          My Orders
-        </button>
-        <button onclick="switchTab('gigs')" id="tab-gigs" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          My Services
-        </button>
-        <button onclick="switchTab('earnings')" id="tab-earnings" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          Earnings & Payouts
-        </button>
+      <nav class="flex space-x-8 overflow-x-auto" aria-label="Tabs">
+        <button type="button" onclick="switchTab('overview')" id="tab-overview" class="tab-btn border-emerald-700 text-emerald-700 pb-4 px-1 border-b-2 font-semibold text-sm">Overview</button>
+        <button type="button" onclick="switchTab('orders')" id="tab-orders" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">My Orders</button>
+        <button type="button" onclick="switchTab('gigs')" id="tab-gigs" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">My Services</button>
+        <button type="button" onclick="switchTab('earnings')" id="tab-earnings" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">Earnings &amp; Payouts</button>
       </nav>
     </div>
 
-    <!-- TAB 1: OVERVIEW -->
     <div id="content-overview" class="tab-content">
-      <!-- Stats Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Orders</p>
@@ -77,341 +70,272 @@
         </div>
         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Available Balance</p>
-          <p class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p>
+          <p id="overviewBalance" class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p>
         </div>
       </div>
 
-      <!-- Recent Orders Summary -->
       <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-900">Recent Active Orders</h2>
-          <button onclick="switchTab('orders')" class="text-xs font-semibold text-emerald-700 hover:underline">View All</button>
+          <button type="button" onclick="switchTab('orders')" class="text-xs font-semibold text-emerald-700 hover:underline">View All</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-gray-600">
             <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-              <tr>
-                <th class="py-3 px-4">Buyer</th>
-                <th class="py-3 px-4">Gig Title</th>
-                <th class="py-3 px-4">Due Date</th>
-                <th class="py-3 px-4">Amount</th>
-                <th class="py-3 px-4">Status</th>
-              </tr>
+              <tr><th class="py-3 px-4">Buyer</th><th class="py-3 px-4">Gig Title</th><th class="py-3 px-4">Due Date</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Status</th></tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr>
-                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
-                <td class="py-3 px-4">Full Stack E-Commerce Store Development</td>
-                <td class="py-3 px-4">Sep 20, 2026</td>
-                <td class="py-3 px-4 font-semibold text-gray-900">PKR 25,000</td>
-                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
-              </tr>
-              <tr>
-                <td class="py-3 px-4 font-medium text-gray-900">Hamza Khan</td>
-                <td class="py-3 px-4">Custom Tailwind CSS Dashboard UI</td>
-                <td class="py-3 px-4">Sep 18, 2026</td>
-                <td class="py-3 px-4 font-semibold text-gray-900">PKR 8,000</td>
-                <td class="py-3 px-4"><span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Review Pending</span></td>
-              </tr>
+              <tr><td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td><td class="py-3 px-4">Full Stack E-Commerce Store Development</td><td class="py-3 px-4">Sep 20, 2026</td><td class="py-3 px-4 font-semibold text-gray-900">PKR 25,000</td><td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td></tr>
+              <tr><td class="py-3 px-4 font-medium text-gray-900">Hamza Khan</td><td class="py-3 px-4">Custom Tailwind CSS Dashboard UI</td><td class="py-3 px-4">Sep 18, 2026</td><td class="py-3 px-4 font-semibold text-gray-900">PKR 8,000</td><td class="py-3 px-4"><span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Review Pending</span></td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: MY ORDERS -->
     <div id="content-orders" class="tab-content hidden">
       <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <h2 class="text-lg font-bold text-gray-900 mb-4">Manage All Orders</h2>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-gray-600">
             <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-              <tr>
-                <th class="py-3 px-4">Order ID</th>
-                <th class="py-3 px-4">Buyer</th>
-                <th class="py-3 px-4">Gig</th>
-                <th class="py-3 px-4">Price</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4">Action</th>
-              </tr>
+              <tr><th class="py-3 px-4">Order ID</th><th class="py-3 px-4">Buyer</th><th class="py-3 px-4">Gig</th><th class="py-3 px-4">Price</th><th class="py-3 px-4">Status</th><th class="py-3 px-4">Action</th></tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-              <tr>
-                <td class="py-3 px-4 font-mono text-xs">#PKG-8092</td>
-                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
-                <td class="py-3 px-4">E-Commerce Store Development</td>
-                <td class="py-3 px-4 font-semibold">PKR 25,000</td>
-                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
-                <td class="py-3 px-4"><button class="text-xs bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800">Deliver Work</button></td>
-              </tr>
-              <tr>
-                <td class="py-3 px-4 font-mono text-xs">#PKG-7811</td>
-                <td class="py-3 px-4 font-medium text-gray-900">Sara Ahmed</td>
-                <td class="py-3 px-4">Logo & Branding Package</td>
-                <td class="py-3 px-4 font-semibold">PKR 5,000</td>
-                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span></td>
-                <td class="py-3 px-4"><button class="text-xs text-gray-500 hover:underline">View Details</button></td>
-              </tr>
+              <tr><td class="py-3 px-4 font-mono text-xs">#PKG-8092</td><td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td><td class="py-3 px-4">E-Commerce Store Development</td><td class="py-3 px-4 font-semibold">PKR 25,000</td><td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td><td class="py-3 px-4"><button type="button" class="text-xs bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800">Deliver Work</button></td></tr>
+              <tr><td class="py-3 px-4 font-mono text-xs">#PKG-7811</td><td class="py-3 px-4 font-medium text-gray-900">Sara Ahmed</td><td class="py-3 px-4">Logo &amp; Branding Package</td><td class="py-3 px-4 font-semibold">PKR 5,000</td><td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span></td><td class="py-3 px-4"><button type="button" class="text-xs text-gray-500 hover:underline">View Details</button></td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3: MY SERVICES / GIGS -->
     <div id="content-gigs" class="tab-content hidden">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Gig Card 1 -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between">
           <div class="p-5">
             <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase">Active</span>
-            <h3 class="text-base font-bold text-gray-900 mt-3">Full Stack Web Application Development in React & Node</h3>
+            <h3 class="text-base font-bold text-gray-900 mt-3">Full Stack Web Application Development in React &amp; Node</h3>
             <p class="text-xs text-gray-500 mt-2">Starting at <span class="text-sm font-bold text-gray-900">PKR 15,000</span></p>
           </div>
           <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex items-center justify-between text-xs">
             <span class="text-gray-500">Impressions: 1,240</span>
-            <div class="space-x-2">
-              <button class="text-emerald-700 font-semibold hover:underline">Edit</button>
-              <button class="text-red-600 font-semibold hover:underline">Delete</button>
-            </div>
+            <div class="space-x-2"><button type="button" class="text-emerald-700 font-semibold hover:underline">Edit</button><button type="button" class="text-red-600 font-semibold hover:underline">Delete</button></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 4: EARNINGS & PAYOUTS -->
     <div id="content-earnings" class="tab-content hidden">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Balance Summary -->
         <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h2 class="text-lg font-bold text-gray-900 mb-4">Payout Account</h2>
           <p class="text-xs text-gray-500 mb-6">Withdraw your net earnings to your preferred local Pakistani bank account or mobile wallet.</p>
-          
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Available for Withdrawal</label>
-              <p class="text-2xl font-extrabold text-emerald-600">PKR 45,000</p>
+              <p id="payoutBalance" class="text-2xl font-extrabold text-emerald-600">PKR 45,000</p>
             </div>
-
             <div>
-             <label class="block text-xs font-semibold text-gray-600 mb-1">Select Payment Method</label>
-<select class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-  <option>JazzCash / EasyPaisa</option>
-  <option>Local Bank Transfer (IBAN)</option>
-  <option>NayaPay / SadaPay</option>
-</select>
-<button onclick="document.getElementById('withdrawModal').style.display='flex'" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">
-  Withdraw Funds
-</button>
+              <label for="quickPayoutMethod" class="block text-xs font-semibold text-gray-600 mb-1">Select Payment Method</label>
+              <select id="quickPayoutMethod" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="JazzCash">JazzCash</option>
+                <option value="EasyPaisa">EasyPaisa</option>
+                <option value="Bank Transfer">Local Bank Transfer (IBAN)</option>
+                <option value="NayaPay / SadaPay">NayaPay / SadaPay</option>
+              </select>
             </div>
-        <!-- Earnings History -->
+            <button id="withdrawFundsBtn" type="button" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">Withdraw Funds</button>
+          </div>
+        </div>
+
         <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h2 class="text-lg font-bold text-gray-900 mb-4">Transaction History</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-600">
               <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-                <tr>
-                  <th class="py-3 px-4">Date</th>
-                  <th class="py-3 px-4">Description</th>
-                  <th class="py-3 px-4">Amount</th>
-                  <th class="py-3 px-4">Type</th>
-                </tr>
+                <tr><th class="py-3 px-4">Date</th><th class="py-3 px-4">Description</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Type</th></tr>
               </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr>
-                  <td class="py-3 px-4">Sep 10, 2026</td>
-                  <td class="py-3 px-4">Order #PKG-7811 Cleared</td>
-                  <td class="py-3 px-4 font-semibold text-emerald-600">+ PKR 4,750</td>
-                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Credit</td>
-                </tr>
-                <tr>
-                  <td class="py-3 px-4">Sep 01, 2026</td>
-                  <td class="py-3 px-4">Withdrawal to JazzCash</td>
-                  <td class="py-3 px-4 font-semibold text-red-600">- PKR 10,000</td>
-                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td>
-                </tr>
+              <tbody id="transactionHistory" class="divide-y divide-gray-100">
+                <tr><td class="py-3 px-4">Sep 10, 2026</td><td class="py-3 px-4">Order #PKG-7811 Cleared</td><td class="py-3 px-4 font-semibold text-emerald-600">+ PKR 4,750</td><td class="py-3 px-4 text-xs font-medium text-gray-500">Credit</td></tr>
+                <tr><td class="py-3 px-4">Sep 01, 2026</td><td class="py-3 px-4">Withdrawal to JazzCash</td><td class="py-3 px-4 font-semibold text-red-600">- PKR 10,000</td><td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td></tr>
               </tbody>
             </table>
           </div>
         </div>
-
       </div>
     </div>
-
   </main>
 
-  <!-- Script for Tab Switching & Security -->
+  <div id="withdrawModal" class="modal" aria-hidden="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative" role="dialog" aria-modal="true" aria-labelledby="withdrawTitle">
+      <button id="closeModal" type="button" class="absolute right-4 top-3 text-2xl text-gray-500 hover:text-gray-800" aria-label="Close">&times;</button>
+      <h3 id="withdrawTitle" class="text-xl font-bold text-gray-900 mb-2">Withdraw Funds</h3>
+      <p class="text-sm text-gray-500 mb-5">Available Balance: <strong id="modalBalance" class="text-emerald-700">PKR 45,000</strong></p>
+
+      <div class="space-y-4">
+        <div>
+          <label for="payoutMethod" class="block text-sm font-semibold text-gray-700 mb-1">Payment Method</label>
+          <select id="payoutMethod" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+            <option value="JazzCash">JazzCash</option>
+            <option value="EasyPaisa">EasyPaisa</option>
+            <option value="Bank Transfer">Local Bank Transfer (IBAN)</option>
+            <option value="NayaPay / SadaPay">NayaPay / SadaPay</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="accountNumber" class="block text-sm font-semibold text-gray-700 mb-1">Account / Wallet Number</label>
+          <input type="text" id="accountNumber" inputmode="numeric" autocomplete="off" placeholder="03001234567" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+        </div>
+
+        <div>
+          <label for="withdrawAmount" class="block text-sm font-semibold text-gray-700 mb-1">Amount (PKR)</label>
+          <input type="number" id="withdrawAmount" min="1000" step="1" placeholder="e.g. 5000" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+          <p class="text-xs text-gray-500 mt-1">Minimum withdrawal: PKR 1,000</p>
+        </div>
+
+        <p id="withdrawMessage" class="hidden text-sm rounded-lg p-3"></p>
+
+        <button id="submitWithdraw" type="button" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm">Confirm Withdrawal</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Security Guard: Check if user is logged in
+    // Authentication
     const isLoggedIn = localStorage.getItem("userLoggedIn");
     if (isLoggedIn !== "true") {
       window.location.href = "login.html";
     }
 
-    // Logout Functionality
-    document.getElementById("logout-btn").addEventListener("click", function() {
-      localStorage.removeItem("userLoggedIn");
-      window.location.href = "index.html";
-    });
+    document.addEventListener("DOMContentLoaded", function () {
+      const modal = document.getElementById("withdrawModal");
+      const openBtn = document.getElementById("withdrawFundsBtn");
+      const closeBtn = document.getElementById("closeModal");
+      const submitBtn = document.getElementById("submitWithdraw");
+      const quickMethod = document.getElementById("quickPayoutMethod");
+      const payoutMethod = document.getElementById("payoutMethod");
+      const accountInput = document.getElementById("accountNumber");
+      const amountInput = document.getElementById("withdrawAmount");
+      const message = document.getElementById("withdrawMessage");
 
-    // Tab Switcher Logic
-    function switchTab(tabName) {
-      // Hide all contents
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      
-      // Reset all tab button styles
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('border-emerald-700', 'text-emerald-700', 'font-semibold');
-        btn.classList.add('border-transparent', 'text-gray-500', 'font-medium');
-      });
+      let availableBalance = 45000;
 
-      // Show active content
-      document.getElementById('content-' + tabName).classList.remove('hidden');
-
-      // Highlight active tab button
-      const activeBtn = document.getElementById('tab-' + tabName);
-      activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
-      activeBtn.classList.add('border-emerald-700', 'text-emerald-700', 'font-semibold');
-    }
-             if (!accNo) { alert('براہ کرم اپنا اکاؤنٹ نمبر درج کریں۔'); return; }
-          if (isNaN(amount) || amount < 1000) { alert('کم از کم ود ڈرا کی رقم PKR 1,000 ہونی چاہیے۔'); return; }
-          if (amount > availableBalance) { alert('آپ کی درخواست کی رقم دستیاب بیلنس سے زیادہ ہے۔'); return; }
-
-          availableBalance -= amount;
-          const balanceEl = document.querySelector('.PayoutAccount h2');
-          if(balanceEl) balanceEl.innerText = `PKR ${availableBalance.toLocaleString()}`;
-
-          alert('ود ڈرا کی درخواست کامیابی سے جمع ہو گئی ہے!');
-          modal.style.display = 'none';
-        });
+      function formatPKR(amount) {
+        return "PKR " + Number(amount).toLocaleString("en-PK");
       }
-    });
-  </script>
 
-  <!-- --- Withdraw Modal HTML & CSS --- -->
-  <style>
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: #fff; margin: 10% auto; padding: 24px; width: 90%; max-width: 400px; border-radius: 8px; position: relative; }
-    .close-btn { position: absolute; right: 16px; top: 12px; font-size: 24px; cursor: pointer; }
-  </style>
+      function updateBalances() {
+        document.getElementById("overviewBalance").textContent = formatPKR(availableBalance);
+        document.getElementById("payoutBalance").textContent = formatPKR(availableBalance);
+        document.getElementById("modalBalance").textContent = formatPKR(availableBalance);
+      }
 
-  <div id="withdrawModal" class="modal" style="display: none; justify-content: center; align-items: center;">
-    <span onclick="document.getElementById('withdrawModal').style.display='none'" class="close-btn" id="closeModal" style="cursor:pointer; position:absolute; right:16px; top:12px; font-size:24px;">&times;</span>
-      <h3>Withdraw Funds</h3>
-      <p>Available Balance: <strong>PKR 45,000</strong></p>
-      <label>Payment Method:</label>
-      <select id="payoutMethod">
-        <option value="JazzCash">JazzCash</option>
-        <option value="EasyPaisa">EasyPaisa</option>
-      </select>
-      <br><br>
-      <label>Account Number:</label>
-      <input type="text" id="accountNumber" placeholder="03001234567" style="width: 100%; margin-bottom: 10px;">
-      <label>Amount (PKR):</label>
-      <input type="number" id="withdrawAmount" placeholder="e.g. 5000" style="width: 100%; margin-bottom: 10px;">
-      <button id="submitWithdraw" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Confirm Withdrawal</button>
-    </div>
-  </div>
-<script>
- <!-- Withdraw Modal -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  // Modal aur elements collect karein
-  const modal = document.getElementById("withdrawModal");
-  const closeModal = document.getElementById("closeModal");
-  const submitBtn = document.getElementById("submitWithdraw");
-
-  // 
-  const buttons = Array.from(document.querySelectorAll("button, a"));
-  const withdrawBtn = buttons.find(b => b.textContent.trim().toLowerCase().includes("withdraw"));
-
-  if (withdrawBtn) {
-    withdrawBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      if (modal) {
-        modal.style.display = "block";
-      } else {
-        // Agar modal HTML me na mile, to prompt fallback
-        const amount = prompt("Enter withdrawal amount (PKR):", "10000");
-        if (amount && !isNaN(amount) && Number(amount) > 0) {
-          alert("Success! PKR " + amount + " withdrawal request submitted successfully.");
+      function showMessage(text, success) {
+        message.textContent = text;
+        message.classList.remove("hidden", "bg-red-50", "text-red-700", "bg-emerald-50", "text-emerald-700");
+        if (success) {
+          message.classList.add("bg-emerald-50", "text-emerald-700");
+        } else {
+          message.classList.add("bg-red-50", "text-red-700");
         }
       }
-    });
-  }
 
-  if (closeModal && modal) {
-    closeModal.addEventListener("click", function () {
-      modal.style.display = "none";
-    });
-  }
-
-  // Close modal when clicking outside content
-  window.addEventListener("click", function (e) {
-    if (e.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-
-  if (submitBtn) {
-    submitBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      const amountInput = document.getElementById("withdrawAmount");
-      const amount = amountInput ? amountInput.value : "";
-      if (amount && Number(amount) > 0) {
-        alert("Success! PKR " + amount + " withdrawal request submitted.");
-        if (modal) modal.style.display = "none";
-      } else {
-        alert("Please enter a valid amount.");
+      function openWithdrawModal() {
+        payoutMethod.value = quickMethod.value;
+        amountInput.value = "";
+        accountInput.value = "";
+        message.classList.add("hidden");
+        updateBalances();
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+        setTimeout(() => accountInput.focus(), 50);
       }
-    });
-  }
-}); 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const withdrawBtn = document.querySelector(".withdraw-btn") || Array.from(document.querySelectorAll("button")).find(el => el.textContent.includes("Withdraw Funds"));
-    const modal = document.getElementById("withdrawModal");
-    const closeBtn = document.getElementById("closeModal");
-    const submitBtn = document.getElementById("submitwithdraw");
 
-    if (withdrawBtn && modal) {
-      withdrawBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        modal.style.display = "flex";
+      function closeWithdrawModal() {
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      openBtn.addEventListener("click", openWithdrawModal);
+      closeBtn.addEventListener("click", closeWithdrawModal);
+
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) closeWithdrawModal();
       });
-    }
 
-    if (closeBtn && modal) {
-      closeBtn.addEventListener("click", function () {
-        modal.style.display = "none";
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal.classList.contains("show")) {
+          closeWithdrawModal();
+        }
       });
-    }
 
-    if (submitBtn) {
       submitBtn.addEventListener("click", function () {
-        const amount = document.getElementById("withdrawAmount").value;
-        const method = document.getElementById("payoutMethod").value;
-        const accountNum = document.getElementById("accountNumber").value;
+        const account = accountInput.value.trim();
+        const amount = Number(amountInput.value);
+        const method = payoutMethod.value;
 
-        if (!amount || !accountNum) {
-          alert("براہ کرم تمام معلومات درج کریں!");
+        if (!account) {
+          showMessage("براہ کرم اپنا اکاؤنٹ/والٹ نمبر درج کریں۔", false);
+          accountInput.focus();
           return;
         }
 
-        alert(`آپ کی ${amount} PKR کی درخواست ${method} کے لیے کامیابی سے جمع ہو گئی ہے!`);
-        if (modal) {
-          modal.style.display = "none";
+        if (!Number.isFinite(amount) || amount < 1000) {
+          showMessage("کم از کم ود ڈرا کی رقم PKR 1,000 ہونی چاہیے۔", false);
+          amountInput.focus();
+          return;
         }
-      });
-    }
 
-    window.addEventListener("click", function (e) {
-      if (e.target === modal) {
-        modal.style.display = "none";
-      }
+        if (amount > availableBalance) {
+          showMessage("آپ کی درخواست کی رقم دستیاب بیلنس سے زیادہ ہے۔", false);
+          amountInput.focus();
+          return;
+        }
+
+        availableBalance -= amount;
+        updateBalances();
+
+        const row = document.createElement("tr");
+        row.innerHTML =
+          '<td class="py-3 px-4">Just now</td>' +
+          '<td class="py-3 px-4">Withdrawal to ' + method.replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</td>' +
+          '<td class="py-3 px-4 font-semibold text-red-600">- ' + formatPKR(amount) + '</td>' +
+          '<td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td>';
+        document.getElementById("transactionHistory").prepend(row);
+
+        showMessage("آپ کی withdrawal request کامیابی سے جمع ہو گئی ہے!", true);
+        setTimeout(closeWithdrawModal, 900);
+      });
+
+      document.getElementById("logout-btn").addEventListener("click", function () {
+        localStorage.removeItem("userLoggedIn");
+        window.location.href = "index.html";
+      });
+
+      updateBalances();
     });
-  });
-        </script>
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-content").forEach(function (el) {
+        el.classList.add("hidden");
+      });
+
+      document.querySelectorAll(".tab-btn").forEach(function (btn) {
+        btn.classList.remove("border-emerald-700", "text-emerald-700", "font-semibold");
+        btn.classList.add("border-transparent", "text-gray-500", "font-medium");
+      });
+
+      const content = document.getElementById("content-" + tabName);
+      const activeBtn = document.getElementById("tab-" + tabName);
+
+      if (content && activeBtn) {
+        content.classList.remove("hidden");
+        activeBtn.classList.remove("border-transparent", "text-gray-500", "font-medium");
+        activeBtn.classList.add("border-emerald-700", "text-emerald-700", "font-semibold");
+      }
+    }
+  </script>
 </body>
 </html>
