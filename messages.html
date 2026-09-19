@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - Messages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .chat-scroll::-webkit-scrollbar { width: 5px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Nav -->
+    <nav class="bg-white border-b border-gray-100 shadow-sm shrink-0">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
+                <a href="Services.html" class="hover:text-emerald-700">Services</a>
+                <a href="order.html" class="hover:text-emerald-700">Orders</a>
+                <a href="messages.html" class="text-emerald-700">Messages</a>
+                <a href="profile.html" class="hover:text-emerald-700">Profile</a>
+                <a href="login.html" class="hover:text-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 min-h-0">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 h-full flex overflow-hidden">
+
+            <!-- Conversation list -->
+            <aside class="w-full sm:w-80 border-r border-gray-100 flex flex-col shrink-0" id="conversationPane">
+                <div class="p-4 border-b border-gray-100">
+                    <h1 class="text-base font-bold text-gray-900">Messages</h1>
+                    <input type="text" id="searchConvo" placeholder="Search conversations..." class="mt-2 w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div id="conversationList" class="flex-1 overflow-y-auto chat-scroll divide-y divide-gray-50"></div>
+            </aside>
+
+            <!-- Active chat -->
+            <section class="flex-1 flex flex-col min-w-0" id="chatPane">
+                <!-- Header -->
+                <div class="p-4 border-b border-gray-100 flex items-center gap-3 shrink-0">
+                    <button id="backToList" class="sm:hidden text-gray-500 text-lg">←</button>
+                    <img id="chatAvatar" src="" alt="" class="w-9 h-9 rounded-full object-cover">
+                    <div class="min-w-0">
+                        <p id="chatName" class="font-semibold text-sm text-gray-900 truncate">Select a conversation</p>
+                        <a id="chatOrderLink" href="#" class="text-[11px] text-emerald-700 hover:underline hidden">View Order →</a>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div id="messagesArea" class="flex-1 overflow-y-auto chat-scroll p-4 space-y-3 bg-gray-50/50"></div>
+
+                <!-- No conversation selected -->
+                <div id="noChatState" class="flex-1 flex items-center justify-center text-sm text-gray-400">
+                    Select a conversation to start chatting
+                </div>
+
+                <!-- Input -->
+                <form id="messageForm" class="hidden p-3 border-t border-gray-100 shrink-0 items-center gap-2">
+                    <label for="attachInput" class="cursor-pointer text-gray-400 hover:text-emerald-700 px-1 text-lg" title="Attach file">📎</label>
+                    <input type="file" id="attachInput" class="hidden">
+                    <input type="text" id="messageInput" autocomplete="off" placeholder="Type your message..." class="flex-1 px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition">Send</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Demo data — replace with a real GET /api/conversations + WebSocket/
+        // polling for live messages from your backend.
+        let conversations = JSON.parse(localStorage.getItem("pakgigConversations") || "null") || [
+            {
+                id: "c1",
+                name: "Bilal Ahmed",
+                seed: "Bilal",
+                orderId: "PG-10234",
+                messages: [
+                    { sender: "them", text: "Hi! I've started working on your logo concepts.", time: "10:02 AM" },
+                    { sender: "me", text: "Great, looking forward to seeing them!", time: "10:05 AM" },
+                    { sender: "them", text: "I'll share the first drafts by tomorrow evening.", time: "10:06 AM" }
+                ]
+            },
+            {
+                id: "c2",
+                name: "Sana Malik",
+                seed: "Sana",
+                orderId: "PG-10221",
+                messages: [
+                    { sender: "them", text: "Your website is delivered. Please review the pages.", time: "Yesterday" },
+                    { sender: "me", text: "Checking it now, thank you!", time: "Yesterday" }
+                ]
+            },
+            {
+                id: "c3",
+                name: "Usman Tariq",
+                seed: "Usman",
+                orderId: "PG-10190",
+                messages: [
+                    { sender: "them", text: "Thanks for the 5-star review!", time: "Mon" },
+                    { sender: "me", text: "You earned it, great work on the SEO audit.", time: "Mon" }
+                ]
+            }
+        ];
+
+        let activeId = null;
+
+        function saveConversations() {
+            localStorage.setItem("pakgigConversations", JSON.stringify(conversations));
+        }
+
+        function avatarUrl(seed) {
+            return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=047857&textColor=ffffff`;
+        }
+
+        function lastMessage(convo) {
+            return convo.messages[convo.messages.length - 1] || { text: "", time: "" };
+        }
+
+        function renderConversationList(filter = "") {
+            const listEl = document.getElementById("conversationList");
+            const q = filter.trim().toLowerCase();
+
+            const filtered = conversations.filter(c => c.name.toLowerCase().includes(q));
+
+            listEl.innerHTML = filtered.map(c => {
+                const last = lastMessage(c);
+                const active = c.id === activeId ? "bg-emerald-50" : "hover:bg-gray-50";
+                return `
+                <button data-id="${c.id}" class="convoBtn w-full text-left p-3.5 flex items-center gap-3 ${active} transition">
+                    <img src="${avatarUrl(c.seed)}" class="w-10 h-10 rounded-full shrink-0" alt="${c.name}">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <p class="text-sm font-semibold text-gray-900 truncate">${c.name}</p>
+                            <span class="text-[10px] text-gray-400 shrink-0">${last.time || ""}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate">${last.text || "No messages yet"}</p>
+                    </div>
+                </button>`;
+            }).join("") || `<p class="text-xs text-gray-400 text-center py-8">No conversations found.</p>`;
+
+            listEl.querySelectorAll(".convoBtn").forEach(btn => {
+                btn.addEventListener("click", () => openConversation(btn.dataset.id));
+            });
+        }
+
+        function renderMessages(convo) {
+            const area = document.getElementById("messagesArea");
+            area.innerHTML = convo.messages.map(m => {
+                const isMe = m.sender === "me";
+                return `
+                <div class="flex ${isMe ? "justify-end" : "justify-start"}">
+                    <div class="max-w-[75%] ${isMe ? "bg-emerald-700 text-white" : "bg-white text-gray-800 border border-gray-200"} rounded-2xl px-4 py-2 text-sm shadow-sm">
+                        <p>${m.text}</p>
+                        <p class="text-[10px] mt-1 ${isMe ? "text-emerald-100" : "text-gray-400"}">${m.time}</p>
+                    </div>
+                </div>`;
+            }).join("");
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function openConversation(id) {
+            const convo = conversations.find(c => c.id === id);
+            if (!convo) return;
+            activeId = id;
+
+            document.getElementById("noChatState").classList.add("hidden");
+            document.getElementById("messagesArea").classList.remove("hidden");
+            document.getElementById("messageForm").classList.remove("hidden");
+            document.getElementById("messageForm").classList.add("flex");
+
+            document.getElementById("chatAvatar").src = avatarUrl(convo.seed);
+            document.getElementById("chatName").textContent = convo.name;
+
+            const orderLink = document.getElementById("chatOrderLink");
+            if (convo.orderId) {
+                orderLink.href = "order.html?order=" + convo.orderId;
+                orderLink.textContent = "Order #" + convo.orderId + " →";
+                orderLink.classList.remove("hidden");
+            } else {
+                orderLink.classList.add("hidden");
+            }
+
+            renderMessages(convo);
+            renderConversationList(document.getElementById("searchConvo").value);
+
+            // Mobile: switch to chat view
+            if (window.innerWidth < 640) {
+                document.getElementById("conversationPane").classList.add("hidden");
+                document.getElementById("chatPane").classList.remove("hidden");
+            }
+        }
+
+        document.getElementById("backToList").addEventListener("click", () => {
+            document.getElementById("conversationPane").classList.remove("hidden");
+            document.getElementById("chatPane").classList.add("hidden");
+        });
+
+        document.getElementById("searchConvo").addEventListener("input", (e) => {
+            renderConversationList(e.target.value);
+        });
+
+        document.getElementById("messageForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = document.getElementById("messageInput");
+            const text = input.value.trim();
+            if (!text || !activeId) return;
+
+            const convo = conversations.find(c => c.id === activeId);
+            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+            // demo only — replace with: fetch(`/api/conversations/${activeId}/messages`, { method: 'POST', body: {...} })
+            convo.messages.push({ sender: "me", text, time });
+            saveConversations();
+
+            input.value = "";
+            renderMessages(convo);
+            renderConversationList(document.getElementById("searchConvo").value);
+        });
+
+        document.getElementById("attachInput").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file || !activeId) return;
+            const convo = conversations.find(c => c.id === activeId);
+            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+            // demo only — replace with real file upload to your backend/storage
+            convo.messages.push({ sender: "me", text: "📎 " + file.name, time });
+            saveConversations();
+            renderMessages(convo);
+            renderConversationList(document.getElementById("searchConvo").value);
+            e.target.value = "";
+        });
+
+        // Auto-open a conversation if arriving from order.html?order=PG-XXXXX
+        (function init() {
+            renderConversationList();
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get("order");
+            const match = orderId ? conversations.find(c => c.orderId === orderId) : null;
+
+            if (match) {
+                openConversation(match.id);
+            } else if (window.innerWidth >= 640 && conversations.length) {
+                openConversation(conversations[0].id);
+            }
+        })();
+    </script>
+</body>
+</html>
