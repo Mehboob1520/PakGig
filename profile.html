@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Top Nav -->
+    <nav class="bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
+                <a href="Services.html" class="hover:text-emerald-700">Services</a>
+                <a href="order.html" class="hover:text-emerald-700">Orders</a>
+                <a href="profile.html" class="text-emerald-700">Profile</a>
+                <a href="login.html" class="hover:text-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+        <!-- Alert -->
+        <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+        <!-- Profile Header Card -->
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <!-- Avatar -->
+                <div class="relative shrink-0">
+                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile photo" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
+                    <label for="avatarInput" class="absolute bottom-0 right-0 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md text-xs">
+                        ✎
+                    </label>
+                    <input type="file" id="avatarInput" accept="image/*" class="hidden">
+                </div>
+
+                <!-- Basic info -->
+                <div class="flex-1 text-center sm:text-left space-y-1">
+                    <h1 id="displayName" class="text-xl font-bold text-gray-900">Your Name</h1>
+                    <p id="displayTagline" class="text-sm text-gray-500">Add a short professional tagline</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-1 text-amber-500 text-sm pt-1">
+                        <span>★★★★★</span>
+                        <span class="text-gray-500 text-xs">(<span id="reviewCount">0</span> reviews)</span>
+                    </div>
+                    <p class="text-xs text-gray-400 pt-1">Member since <span id="memberSince">—</span></p>
+                </div>
+
+                <!-- Quick stats -->
+                <div class="grid grid-cols-3 gap-4 text-center shrink-0">
+                    <div>
+                        <p class="text-lg font-bold text-gray-900" id="statOrders">0</p>
+                        <p class="text-[11px] text-gray-500">Orders</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-gray-900" id="statActive">0</p>
+                        <p class="text-[11px] text-gray-500">Active</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-emerald-700" id="statEscrow">Rs. 0</p>
+                        <p class="text-[11px] text-gray-500">In Escrow</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Edit Profile Form -->
+            <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8 space-y-5">
+                <h2 class="text-base font-bold text-gray-900">Edit Profile</h2>
+
+                <form id="profileForm" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="fullName" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Ahmed Khan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Professional Title</label>
+                            <input type="text" id="tagline" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Full-Stack Web Developer">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
+                            <input type="email" id="email" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="name@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="phone" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="03XX-XXXXXXX">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">City</label>
+                        <input type="text" id="city" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Lahore">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Skills (comma separated)</label>
+                        <input type="text" id="skills" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Web Design, WordPress, SEO">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">About Me</label>
+                        <textarea id="bio" rows="4" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none" placeholder="Tell buyers a bit about your experience..."></textarea>
+                    </div>
+
+                    <div class="flex gap-3 pt-2">
+                        <button type="submit" id="saveBtn" class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed">
+                            Save Changes
+                        </button>
+                        <button type="button" id="cancelBtn" class="px-6 py-2.5 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sidebar: account/security -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
+                    <h2 class="text-base font-bold text-gray-900">Account & Security</h2>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Account type</span>
+                        <span id="accountType" class="font-semibold text-gray-900">Buyer</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Email verified</span>
+                        <span id="verifiedBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                    </div>
+
+                    <hr class="border-gray-100">
+
+                    <a href="login.html" class="block text-xs font-semibold text-emerald-700 hover:underline">Change Password →</a>
+                    <button type="button" id="deleteAccountBtn" class="block text-xs font-semibold text-red-600 hover:underline">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Load saved profile (demo: localStorage; replace with a real
+        // GET /api/profile call to your backend) ---
+        function loadProfile() {
+            const saved = JSON.parse(localStorage.getItem("pakgigProfile") || "{}");
+
+            document.getElementById("fullName").value  = saved.fullName  || "";
+            document.getElementById("tagline").value   = saved.tagline   || "";
+            document.getElementById("email").value     = saved.email    || "";
+            document.getElementById("phone").value     = saved.phone    || "";
+            document.getElementById("city").value      = saved.city     || "";
+            document.getElementById("skills").value    = saved.skills   || "";
+            document.getElementById("bio").value       = saved.bio      || "";
+
+            document.getElementById("displayName").textContent    = saved.fullName || "Your Name";
+            document.getElementById("displayTagline").textContent = saved.tagline || "Add a short professional tagline";
+            document.getElementById("memberSince").textContent    = saved.memberSince || new Date().toLocaleDateString();
+            document.getElementById("statOrders").textContent     = saved.stats?.orders  ?? 0;
+            document.getElementById("statActive").textContent     = saved.stats?.active  ?? 0;
+            document.getElementById("statEscrow").textContent     = "Rs. " + (saved.stats?.escrow ?? 0);
+            document.getElementById("reviewCount").textContent    = saved.stats?.reviews ?? 0;
+        }
+
+        function showAlert(type, msg) {
+            const alertBox = document.getElementById("alertBox");
+            const styles = type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800";
+            alertBox.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            alertBox.innerHTML = msg;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // Avatar preview (client-side only; upload to backend separately)
+        document.getElementById("avatarInput").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById("avatarPreview").src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById("profileForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const saveBtn = document.getElementById("saveBtn");
+
+            const fullName = document.getElementById("fullName").value.trim();
+            const email    = document.getElementById("email").value.trim();
+            const emailOk  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+            if (!fullName) {
+                showAlert("error", "Please enter your full name.");
+                return;
+            }
+            if (!emailOk) {
+                showAlert("error", "Please enter a valid email address.");
+                return;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = "Saving...";
+
+            const profile = {
+                fullName,
+                tagline: document.getElementById("tagline").value.trim(),
+                email,
+                phone: document.getElementById("phone").value.trim(),
+                city: document.getElementById("city").value.trim(),
+                skills: document.getElementById("skills").value.trim(),
+                bio: document.getElementById("bio").value.trim(),
+                memberSince: document.getElementById("memberSince").textContent,
+                stats: {
+                    orders: document.getElementById("statOrders").textContent,
+                    active: document.getElementById("statActive").textContent,
+                    escrow: document.getElementById("statEscrow").textContent.replace("Rs. ", ""),
+                    reviews: document.getElementById("reviewCount").textContent,
+                }
+            };
+
+            // demo only — replace with: fetch('/api/profile', { method: 'PUT', ... })
+            setTimeout(() => {
+                localStorage.setItem("pakgigProfile", JSON.stringify(profile));
+                document.getElementById("displayName").textContent    = fullName;
+                document.getElementById("displayTagline").textContent = profile.tagline || "Add a short professional tagline";
+
+                showAlert("success", "Profile updated successfully.");
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = "Save Changes";
+            }, 800);
+        });
+
+        document.getElementById("cancelBtn").addEventListener("click", loadProfile);
+
+        document.getElementById("deleteAccountBtn").addEventListener("click", () => {
+            if (confirm("Are you sure you want to permanently delete your PakGig account? This cannot be undone.")) {
+                // demo only — replace with: fetch('/api/profile', { method: 'DELETE' })
+                localStorage.removeItem("pakgigProfile");
+                localStorage.removeItem("userLoggedIn");
+                window.location.href = "index.html";
+            }
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>
