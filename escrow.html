@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - Escrow & Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Top Nav -->
+    <nav class="bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
+                <a href="Services.html" class="hover:text-emerald-700">Services</a>
+                <a href="order.html" class="hover:text-emerald-700">Orders</a>
+                <a href="escrow.html" class="text-emerald-700">Escrow</a>
+                <a href="messages.html" class="hover:text-emerald-700">Messages</a>
+                <a href="profile.html" class="hover:text-emerald-700">Profile</a>
+                <a href="login.html" class="hover:text-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+        <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">Escrow & Wallet</h1>
+            <p class="text-xs text-gray-500 mt-1">PakGig holds buyer payments securely until work is approved</p>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <p class="text-xs text-gray-500">Held in Escrow</p>
+                <p class="text-2xl font-bold text-amber-600 mt-1" id="heldTotal">Rs. 0</p>
+                <p class="text-[11px] text-gray-400 mt-1">Locked until order approval</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <p class="text-xs text-gray-500">Available Balance</p>
+                <p class="text-2xl font-bold text-emerald-700 mt-1" id="availableTotal">Rs. 0</p>
+                <p class="text-[11px] text-gray-400 mt-1">Ready to withdraw</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <p class="text-xs text-gray-500">Total Released (all time)</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1" id="releasedTotal">Rs. 0</p>
+                <p class="text-[11px] text-gray-400 mt-1">Across completed orders</p>
+            </div>
+        </div>
+
+        <!-- Withdraw action -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <p class="text-sm font-semibold text-gray-900">Withdraw your available balance</p>
+                <p class="text-xs text-gray-500 mt-0.5">Transfers to your linked bank account within 2-3 business days</p>
+            </div>
+            <button id="withdrawBtn" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition shrink-0">
+                Withdraw Funds
+            </button>
+        </div>
+
+        <!-- How escrow works -->
+        <details class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <summary class="text-sm font-semibold text-gray-900 cursor-pointer">How does PakGig escrow work?</summary>
+            <ol class="mt-3 space-y-2 text-xs text-gray-600 list-decimal list-inside">
+                <li>Buyer pays upfront — funds are held securely by PakGig, not the seller.</li>
+                <li>Seller delivers the work through the order page.</li>
+                <li>Buyer reviews the delivery and releases payment, or requests a revision.</li>
+                <li>Once released, funds move to the seller's Available Balance and can be withdrawn.</li>
+                <li>If there's a disagreement, either party can open a dispute for PakGig support to review.</li>
+            </ol>
+        </details>
+
+        <!-- Transactions -->
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-bold text-gray-900">Transaction History</h2>
+                <div class="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 text-xs font-semibold" id="filterTabs">
+                    <button data-filter="all" class="filter-btn px-3 py-1.5 rounded-md bg-emerald-700 text-white">All</button>
+                    <button data-filter="held" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Held</button>
+                    <button data-filter="released" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Released</button>
+                    <button data-filter="refunded" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Refunded</button>
+                    <button data-filter="withdrawn" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Withdrawn</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50" id="txList"></div>
+
+            <div id="emptyState" class="hidden text-center py-12 bg-white rounded-2xl border border-gray-100 mt-3">
+                <p class="text-sm text-gray-500">No transactions in this category.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 px-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-gray-900">Withdraw Funds</h3>
+                    <p class="text-xs text-gray-500 mt-1">Available: <span id="modalAvailable" class="font-semibold text-emerald-700">Rs. 0</span></p>
+                </div>
+                <button type="button" id="closeWithdraw" aria-label="Close" class="text-gray-400 hover:text-gray-700 text-lg leading-none">&times;</button>
+            </div>
+
+            <div id="withdrawAlert" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Amount (Rs.)</label>
+                    <input type="number" id="withdrawAmount" min="1" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. 5000">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Bank Account</label>
+                    <select id="bankSelect" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option>Meezan Bank •••• 4821</option>
+                        <option>JazzCash •••• 0091</option>
+                        <option>+ Add new account</option>
+                    </select>
+                </div>
+                <button type="button" id="confirmWithdraw" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed">
+                    Confirm Withdrawal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo data — replace with a real GET /api/escrow call to your backend.
+        let transactions = JSON.parse(localStorage.getItem("pakgigEscrow") || "null") || [
+            { id: "PG-10234", title: "Modern Logo Design for PakGig", amount: 8000,  status: "held",      date: "2026-09-15" },
+            { id: "PG-10221", title: "WordPress Business Website",     amount: 35000, status: "held",      date: "2026-09-12" },
+            { id: "PG-10190", title: "SEO Audit & On-Page Optimization", amount: 12000, status: "released",  date: "2026-09-05" },
+            { id: "PG-10177", title: "Urdu Voiceover for Ad (60 sec)", amount: 4000,  status: "refunded",  date: "2026-08-30" },
+            { id: "PG-10102", title: "Product Photography (10 shots)", amount: 15000, status: "withdrawn", date: "2026-08-20" }
+        ];
+
+        const statusMeta = {
+            held:      { label: "Held",      badge: "bg-amber-50 text-amber-700 border-amber-200",     amountColor: "text-amber-700" },
+            released:  { label: "Released",  badge: "bg-emerald-50 text-emerald-700 border-emerald-200", amountColor: "text-emerald-700" },
+            refunded:  { label: "Refunded",  badge: "bg-gray-100 text-gray-600 border-gray-200",        amountColor: "text-gray-500" },
+            withdrawn: { label: "Withdrawn", badge: "bg-blue-50 text-blue-700 border-blue-200",         amountColor: "text-blue-700" }
+        };
+
+        let currentFilter = "all";
+
+        function money(n) {
+            return "Rs. " + Number(n).toLocaleString();
+        }
+
+        function saveTx() {
+            localStorage.setItem("pakgigEscrow", JSON.stringify(transactions));
+        }
+
+        function computeTotals() {
+            const held = transactions.filter(t => t.status === "held").reduce((s, t) => s + t.amount, 0);
+            const released = transactions.filter(t => t.status === "released").reduce((s, t) => s + t.amount, 0);
+            const withdrawn = transactions.filter(t => t.status === "withdrawn").reduce((s, t) => s + t.amount, 0);
+            const releasedAllTime = released + withdrawn;
+
+            document.getElementById("heldTotal").textContent = money(held);
+            document.getElementById("availableTotal").textContent = money(released);
+            document.getElementById("releasedTotal").textContent = money(releasedAllTime);
+            document.getElementById("modalAvailable").textContent = money(released);
+        }
+
+        function renderTransactions() {
+            const list = document.getElementById("txList");
+            const empty = document.getElementById("emptyState");
+
+            const filtered = transactions.filter(t => currentFilter === "all" ? true : t.status === currentFilter);
+
+            if (filtered.length === 0) {
+                list.innerHTML = "";
+                list.classList.add("hidden");
+                empty.classList.remove("hidden");
+                return;
+            }
+            list.classList.remove("hidden");
+            empty.classList.add("hidden");
+
+            list.innerHTML = filtered.map(t => {
+                const s = statusMeta[t.status];
+                return `
+                <div class="p-4 flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">${t.title}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">#${t.id} &middot; ${t.date}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="font-bold text-sm ${s.amountColor}">${money(t.amount)}</p>
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span>
+                    </div>
+                    <a href="order.html" class="text-xs font-semibold text-emerald-700 hover:underline shrink-0">View →</a>
+                </div>`;
+            }).join("");
+        }
+
+        function showAlert(type, msg) {
+            const box = document.getElementById("alertBox");
+            const styles = type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800";
+            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            box.innerHTML = msg;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // Filter tabs
+        document.getElementById("filterTabs").addEventListener("click", (e) => {
+            const btn = e.target.closest(".filter-btn");
+            if (!btn) return;
+            currentFilter = btn.dataset.filter;
+
+            document.querySelectorAll(".filter-btn").forEach(b => {
+                b.classList.remove("bg-emerald-700", "text-white");
+                b.classList.add("text-gray-600");
+            });
+            btn.classList.add("bg-emerald-700", "text-white");
+            btn.classList.remove("text-gray-600");
+
+            renderTransactions();
+        });
+
+        // Withdraw modal
+        const withdrawModal = document.getElementById("withdrawModal");
+        const withdrawAlert = document.getElementById("withdrawAlert");
+        const withdrawAmount = document.getElementById("withdrawAmount");
+        const confirmWithdraw = document.getElementById("confirmWithdraw");
+
+        function openWithdraw() {
+            withdrawAlert.className = "hidden";
+            withdrawAmount.value = "";
+            confirmWithdraw.disabled = false;
+            confirmWithdraw.innerHTML = "Confirm Withdrawal";
+            withdrawModal.classList.remove("hidden");
+            withdrawModal.classList.add("flex");
+        }
+
+        function closeWithdraw() {
+            withdrawModal.classList.add("hidden");
+            withdrawModal.classList.remove("flex");
+        }
+
+        document.getElementById("withdrawBtn").addEventListener("click", openWithdraw);
+        document.getElementById("closeWithdraw").addEventListener("click", closeWithdraw);
+        withdrawModal.addEventListener("click", (e) => { if (e.target === withdrawModal) closeWithdraw(); });
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !withdrawModal.classList.contains("hidden")) closeWithdraw();
+        });
+
+        confirmWithdraw.addEventListener("click", () => {
+            const available = transactions.filter(t => t.status === "released").reduce((s, t) => s + t.amount, 0);
+            const amount = Number(withdrawAmount.value);
+
+            if (!amount || amount <= 0) {
+                withdrawAlert.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+                withdrawAlert.innerHTML = "Please enter a valid amount.";
+                return;
+            }
+            if (amount > available) {
+                withdrawAlert.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+                withdrawAlert.innerHTML = "Amount exceeds your available balance.";
+                return;
+            }
+
+            confirmWithdraw.disabled = true;
+            confirmWithdraw.innerHTML = "Processing...";
+
+            // demo only — replace with: fetch('/api/escrow/withdraw', { method: 'POST', body: {...} })
+            setTimeout(() => {
+                transactions.push({
+                    id: "WD-" + Date.now().toString().slice(-6),
+                    title: "Withdrawal to " + document.getElementById("bankSelect").value,
+                    amount: amount,
+                    status: "withdrawn",
+                    date: new Date().toISOString().slice(0, 10)
+                });
+                // reduce released balance by marking oldest released tx as withdrawn proportionally
+                // (kept simple for demo — a real backend would track ledger entries precisely)
+                let remaining = amount;
+                transactions = transactions.map(t => {
+                    if (t.status === "released" && remaining > 0) {
+                        if (t.amount <= remaining) {
+                            remaining -= t.amount;
+                            return { ...t, status: "withdrawn" };
+                        }
+                    }
+                    return t;
+                });
+
+                saveTx();
+                computeTotals();
+                renderTransactions();
+                closeWithdraw();
+                showAlert("success", "Withdrawal of " + money(amount) + " initiated. Funds arrive in 2-3 business days.");
+            }, 1000);
+        });
+
+        computeTotals();
+        renderTransactions();
+    </script>
+</body>
+</html>
