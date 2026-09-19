@@ -5,358 +5,329 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - PakGig</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px}
+    .modal.show{display:flex}
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-6">
-        <a href="index.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">PakGig</a>
-        <nav class="hidden md:flex space-x-4">
-          <a href="Services.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Services</a>
-        </nav>
-      </div>
-      
-      <div class="flex items-center space-x-4">
-        <button id="logout-btn" class="text-sm font-semibold text-red-600 hover:text-red-800">Logout</button>
-        <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
-          M
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Dashboard Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-    
-    <!-- Welcome Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Welcome Back, Mehboob!</h1>
-        <p class="text-sm text-gray-500">Manage your freelancing activities, active orders, and earnings.</p>
-      </div>
-      <a href="Services.html" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">
-        + Create New Gig
-      </a>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="border-b border-gray-200 mb-8">
-      <nav class="flex space-x-8" aria-label="Tabs">
-        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn border-emerald-700 text-emerald-700 pb-4 px-1 border-b-2 font-semibold text-sm">
-          Overview
-        </button>
-        <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          My Orders
-        </button>
-        <button onclick="switchTab('gigs')" id="tab-gigs" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          My Services
-        </button>
-        <button onclick="switchTab('earnings')" id="tab-earnings" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">
-          Earnings & Payouts
-        </button>
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="flex items-center space-x-6">
+      <a href="index.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">PakGig</a>
+      <nav class="hidden md:flex space-x-4">
+        <a href="Services.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Services</a>
       </nav>
     </div>
-
-    <!-- TAB 1: OVERVIEW -->
-    <div id="content-overview" class="tab-content">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Orders</p>
-          <p class="text-3xl font-extrabold text-gray-900 mt-2">3</p>
-        </div>
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completed Orders</p>
-          <p class="text-3xl font-extrabold text-gray-900 mt-2">14</p>
-        </div>
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Clearance</p>
-          <p class="text-3xl font-extrabold text-amber-600 mt-2">PKR 12,500</p>
-        </div>
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Available Balance</p>
-          <p class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p>
-        </div>
-      </div>
-
-      <!-- Recent Orders Summary -->
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold text-gray-900">Recent Active Orders</h2>
-          <button onclick="switchTab('orders')" class="text-xs font-semibold text-emerald-700 hover:underline">View All</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-gray-600">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-              <tr>
-                <th class="py-3 px-4">Buyer</th>
-                <th class="py-3 px-4">Gig Title</th>
-                <th class="py-3 px-4">Due Date</th>
-                <th class="py-3 px-4">Amount</th>
-                <th class="py-3 px-4">Status</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr>
-                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
-                <td class="py-3 px-4">Full Stack E-Commerce Store Development</td>
-                <td class="py-3 px-4">Sep 20, 2026</td>
-                <td class="py-3 px-4 font-semibold text-gray-900">PKR 25,000</td>
-                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
-              </tr>
-              <tr>
-                <td class="py-3 px-4 font-medium text-gray-900">Hamza Khan</td>
-                <td class="py-3 px-4">Custom Tailwind CSS Dashboard UI</td>
-                <td class="py-3 px-4">Sep 18, 2026</td>
-                <td class="py-3 px-4 font-semibold text-gray-900">PKR 8,000</td>
-                <td class="py-3 px-4"><span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Review Pending</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: MY ORDERS -->
-    <div id="content-orders" class="tab-content hidden">
-      <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Manage All Orders</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-gray-600">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-              <tr>
-                <th class="py-3 px-4">Order ID</th>
-                <th class="py-3 px-4">Buyer</th>
-                <th class="py-3 px-4">Gig</th>
-                <th class="py-3 px-4">Price</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4">Action</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr>
-                <td class="py-3 px-4 font-mono text-xs">#PKG-8092</td>
-                <td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td>
-                <td class="py-3 px-4">E-Commerce Store Development</td>
-                <td class="py-3 px-4 font-semibold">PKR 25,000</td>
-                <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td>
-                <td class="py-3 px-4"><button class="text-xs bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800">Deliver Work</button></td>
-              </tr>
-              <tr>
-                <td class="py-3 px-4 font-mono text-xs">#PKG-7811</td>
-                <td class="py-3 px-4 font-medium text-gray-900">Sara Ahmed</td>
-                <td class="py-3 px-4">Logo & Branding Package</td>
-                <td class="py-3 px-4 font-semibold">PKR 5,000</td>
-                <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span></td>
-                <td class="py-3 px-4"><button class="text-xs text-gray-500 hover:underline">View Details</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: MY SERVICES / GIGS -->
-    <div id="content-gigs" class="tab-content hidden">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Gig Card 1 -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between">
-          <div class="p-5">
-            <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase">Active</span>
-            <h3 class="text-base font-bold text-gray-900 mt-3">Full Stack Web Application Development in React & Node</h3>
-            <p class="text-xs text-gray-500 mt-2">Starting at <span class="text-sm font-bold text-gray-900">PKR 15,000</span></p>
-          </div>
-          <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex items-center justify-between text-xs">
-            <span class="text-gray-500">Impressions: 1,240</span>
-            <div class="space-x-2">
-              <button class="text-emerald-700 font-semibold hover:underline">Edit</button>
-              <button class="text-red-600 font-semibold hover:underline">Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: EARNINGS & PAYOUTS -->
-    <div id="content-earnings" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Balance Summary -->
-        <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">Payout Account</h2>
-          <p class="text-xs text-gray-500 mb-6">Withdraw your net earnings to your preferred local Pakistani bank account or mobile wallet.</p>
-          
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 mb-1">Available for Withdrawal</label>
-              <p class="text-2xl font-extrabold text-emerald-600">PKR 45,000</p>
-            </div>
-
-            <div>
-             <label class="block text-xs font-semibold text-gray-600 mb-1">Select Payment Method</label>
-<select class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-emerald-500 focus:border-emerald-500">
-  <option>JazzCash / EasyPaisa</option>
-  <option>Local Bank Transfer (IBAN)</option>
-  <option>NayaPay / SadaPay</option>
-</select>
-<button id="withdraw-btn" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">
-  Withdraw Funds
-</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Earnings History -->
-        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">Transaction History</h2>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-gray-600">
-              <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200">
-                <tr>
-                  <th class="py-3 px-4">Date</th>
-                  <th class="py-3 px-4">Description</th>
-                  <th class="py-3 px-4">Amount</th>
-                  <th class="py-3 px-4">Type</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr>
-                  <td class="py-3 px-4">Sep 10, 2026</td>
-                  <td class="py-3 px-4">Order #PKG-7811 Cleared</td>
-                  <td class="py-3 px-4 font-semibold text-emerald-600">+ PKR 4,750</td>
-                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Credit</td>
-                </tr>
-                <tr>
-                  <td class="py-3 px-4">Sep 01, 2026</td>
-                  <td class="py-3 px-4">Withdrawal to JazzCash</td>
-                  <td class="py-3 px-4 font-semibold text-red-600">- PKR 10,000</td>
-                  <td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Script for Tab Switching & Security -->
-  <script>
-    // Security Guard: Check if user is logged in
-    const isLoggedIn = localStorage.getItem("userLoggedIn");
-    if (isLoggedIn !== "true") {
-      window.location.href = "login.html";
-    }
-
-    // Logout Functionality
-    document.getElementById("logout-btn").addEventListener("click", function() {
-      localStorage.removeItem("userLoggedIn");
-      window.location.href = "index.html";
-    });
-
-    // Tab Switcher Logic
-    function switchTab(tabName) {
-      // Hide all contents
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      
-      // Reset all tab button styles
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('border-emerald-700', 'text-emerald-700', 'font-semibold');
-        btn.classList.add('border-transparent', 'text-gray-500', 'font-medium');
-      });
-
-      // Show active content
-      document.getElementById('content-' + tabName).classList.remove('hidden');
-
-      // Highlight active tab button
-      const activeBtn = document.getElementById('tab-' + tabName);
-      activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
-      activeBtn.classList.add('border-emerald-700', 'text-emerald-700', 'font-semibold');
-    }
-  </script>
-
-  <!-- --- Withdraw Modal HTML & CSS --- -->
-  <style>
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: #fff; margin: 10% auto; padding: 24px; width: 90%; max-width: 400px; border-radius: 8px; position: relative; }
-    .close-btn { position: absolute; right: 16px; top: 12px; font-size: 24px; cursor: pointer; }
-  </style>
-
-  <div id="withdrawModal" class="modal" style="justify-content: center; align-items: center;">
-    <div class="modal-content">
-      <span class="close-btn" id="closeModal">&times;</span>
-      <h3>Withdraw Funds</h3>
-      <p>Available Balance: <strong id="withdrawModalBalance">PKR 45,000</strong></p>
-      <label>Payment Method:</label>
-      <select id="payoutMethod">
-        <option value="JazzCash">JazzCash</option>
-        <option value="EasyPaisa">EasyPaisa</option>
-      </select>
-      <br><br>
-      <label>Account Number:</label>
-      <input type="text" id="accountNumber" placeholder="03001234567" style="width: 100%; margin-bottom: 10px;">
-      <label>Amount (PKR):</label>
-      <input type="number" id="withdrawAmount" placeholder="e.g. 5000" style="width: 100%; margin-bottom: 10px;">
-      <button id="submitWithdraw" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Confirm Withdrawal</button>
+    <div class="flex items-center space-x-4">
+      <button id="logout-btn" type="button" class="text-sm font-semibold text-red-600 hover:text-red-800">Logout</button>
+      <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">M</div>
     </div>
   </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+  <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Welcome Back, Mehboob!</h1>
+      <p class="text-sm text-gray-500">Manage your freelancing activities, active orders, and earnings.</p>
+    </div>
+    <a href="Services.html" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">+ Create New Gig</a>
+  </div>
+
+  <div class="border-b border-gray-200 mb-8">
+    <nav class="flex space-x-8 overflow-x-auto" aria-label="Tabs">
+      <button type="button" onclick="switchTab('overview')" id="tab-overview" class="tab-btn border-emerald-700 text-emerald-700 pb-4 px-1 border-b-2 font-semibold text-sm">Overview</button>
+      <button type="button" onclick="switchTab('orders')" id="tab-orders" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">My Orders</button>
+      <button type="button" onclick="switchTab('gigs')" id="tab-gigs" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">My Services</button>
+      <button type="button" onclick="switchTab('earnings')" id="tab-earnings" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 pb-4 px-1 border-b-2 font-medium text-sm">Earnings &amp; Payouts</button>
+    </nav>
+  </div>
+
+  <section id="content-overview" class="tab-content">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Orders</p><p class="text-3xl font-extrabold text-gray-900 mt-2">3</p></div>
+      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Completed Orders</p><p class="text-3xl font-extrabold text-gray-900 mt-2">14</p></div>
+      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Clearance</p><p class="text-3xl font-extrabold text-amber-600 mt-2">PKR 12,500</p></div>
+      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Available Balance</p><p id="overviewBalance" class="text-3xl font-extrabold text-emerald-600 mt-2">PKR 45,000</p></div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-900">Recent Active Orders</h2><button type="button" onclick="switchTab('orders')" class="text-xs font-semibold text-emerald-700 hover:underline">View All</button></div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200"><tr><th class="py-3 px-4">Buyer</th><th class="py-3 px-4">Gig Title</th><th class="py-3 px-4">Due Date</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Status</th></tr></thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr><td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td><td class="py-3 px-4">Full Stack E-Commerce Store Development</td><td class="py-3 px-4">Sep 20, 2026</td><td class="py-3 px-4 font-semibold text-gray-900">PKR 25,000</td><td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td></tr>
+            <tr><td class="py-3 px-4 font-medium text-gray-900">Hamza Khan</td><td class="py-3 px-4">Custom Tailwind CSS Dashboard UI</td><td class="py-3 px-4">Sep 18, 2026</td><td class="py-3 px-4 font-semibold text-gray-900">PKR 8,000</td><td class="py-3 px-4"><span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Review Pending</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="content-orders" class="tab-content hidden">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">Manage All Orders</h2>
+      <div class="overflow-x-auto"><table class="w-full text-left text-sm text-gray-600">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200"><tr><th class="py-3 px-4">Order ID</th><th class="py-3 px-4">Buyer</th><th class="py-3 px-4">Gig</th><th class="py-3 px-4">Price</th><th class="py-3 px-4">Status</th><th class="py-3 px-4">Action</th></tr></thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr id="row-PKG-8092"><td class="py-3 px-4 font-mono text-xs">#PKG-8092</td><td class="py-3 px-4 font-medium text-gray-900">Ali Raza</td><td class="py-3 px-4">E-Commerce Store Development</td><td class="py-3 px-4 font-semibold">PKR 25,000</td><td class="py-3 px-4"><span id="status-PKG-8092" class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">In Progress</span></td><td class="py-3 px-4"><button type="button" onclick="openDeliverModal('PKG-8092','Ali Raza','E-Commerce Store Development','PKR 25,000')" class="text-xs bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800">Deliver Work</button></td></tr>
+          <tr id="row-PKG-7811"><td class="py-3 px-4 font-mono text-xs">#PKG-7811</td><td class="py-3 px-4 font-medium text-gray-900">Sara Ahmed</td><td class="py-3 px-4">Logo &amp; Branding Package</td><td class="py-3 px-4 font-semibold">PKR 5,000</td><td class="py-3 px-4"><span id="status-PKG-7811" class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span></td><td class="py-3 px-4"><button type="button" onclick="openDetailsModal('PKG-7811','Sara Ahmed','Logo &amp; Branding Package','PKR 5,000','Completed')" class="text-xs text-gray-500 hover:underline">View Details</button></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="content-gigs" class="tab-content hidden">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div id="gig-card-1" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between">
+        <div class="p-5"><span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-md uppercase">Active</span><h3 class="text-base font-bold text-gray-900 mt-3">Full Stack Web Application Development in React &amp; Node</h3><p class="text-xs text-gray-500 mt-2">Starting at <span class="text-sm font-bold text-gray-900">PKR 15,000</span></p></div>
+        <div class="bg-gray-50 px-5 py-3 border-t border-gray-100 flex items-center justify-between text-xs"><span class="text-gray-500">Impressions: 1,240</span><div class="space-x-2"><button type="button" onclick="editGig('gig-card-1')" class="text-emerald-700 font-semibold hover:underline">Edit</button><button type="button" onclick="deleteGig('gig-card-1')" class="text-red-600 font-semibold hover:underline">Delete</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="content-earnings" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Payout Account</h2>
+        <p class="text-xs text-gray-500 mb-6">Withdraw your net earnings to your preferred local Pakistani bank account or mobile wallet.</p>
+        <div class="space-y-4">
+          <div><label class="block text-xs font-semibold text-gray-600 mb-1">Available for Withdrawal</label><p id="payoutBalance" class="text-2xl font-extrabold text-emerald-600">PKR 45,000</p></div>
+          <div><label for="quickPayoutMethod" class="block text-xs font-semibold text-gray-600 mb-1">Select Payment Method</label><select id="quickPayoutMethod" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><option>JazzCash</option><option>EasyPaisa</option><option>Bank Transfer</option><option>NayaPay / SadaPay</option></select></div>
+          <button id="withdrawFundsBtn" type="button" onclick="openWithdrawModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm">Withdraw Funds</button>
+        </div>
+      </div>
+      <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Transaction History</h2>
+        <div class="overflow-x-auto"><table class="w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-400 border-b border-gray-200"><tr><th class="py-3 px-4">Date</th><th class="py-3 px-4">Description</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Type</th></tr></thead>
+          <tbody id="transactionHistory" class="divide-y divide-gray-100">
+            <tr><td class="py-3 px-4">Sep 10, 2026</td><td class="py-3 px-4">Order #PKG-7811 Cleared</td><td class="py-3 px-4 font-semibold text-emerald-600">+ PKR 4,750</td><td class="py-3 px-4 text-xs font-medium text-gray-500">Credit</td></tr>
+            <tr><td class="py-3 px-4">Sep 01, 2026</td><td class="py-3 px-4">Withdrawal to JazzCash</td><td class="py-3 px-4 font-semibold text-red-600">- PKR 10,000</td><td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="withdrawModal" class="modal" aria-hidden="true">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative" role="dialog" aria-modal="true">
+    <button type="button" onclick="closeWithdrawModal()" class="absolute right-4 top-3 text-2xl text-gray-500 hover:text-gray-800" aria-label="Close">&times;</button>
+    <h3 class="text-xl font-bold text-gray-900 mb-2">Withdraw Funds</h3>
+    <p class="text-sm text-gray-500 mb-5">Available Balance: <strong id="modalBalance" class="text-emerald-700">PKR 45,000</strong></p>
+    <div class="space-y-4">
+      <div><label for="payoutMethod" class="block text-sm font-semibold text-gray-700 mb-1">Payment Method</label><select id="payoutMethod" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><option>JazzCash</option><option>EasyPaisa</option><option>Bank Transfer</option><option>NayaPay / SadaPay</option></select></div>
+      <div><label for="accountNumber" class="block text-sm font-semibold text-gray-700 mb-1">Account / Wallet Number</label><input type="text" id="accountNumber" inputmode="numeric" autocomplete="off" placeholder="03001234567" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+      <div><label for="withdrawAmount" class="block text-sm font-semibold text-gray-700 mb-1">Amount (PKR)</label><input type="number" id="withdrawAmount" min="1000" step="1" placeholder="e.g. 5000" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><p class="text-xs text-gray-500 mt-1">Minimum withdrawal: PKR 1,000</p></div>
+      <p id="withdrawMessage" class="hidden text-sm rounded-lg p-3"></p>
+      <button type="button" onclick="submitWithdrawal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm">Confirm Withdrawal</button>
+    </div>
+  </div>
+</div>
+
+<div id="deliverModal" class="modal" aria-hidden="true">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+    <button type="button" onclick="closeDeliverModal()" class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+    <h2 class="text-lg font-bold text-gray-900 mb-1">Deliver Work</h2>
+    <p id="deliverOrderInfo" class="text-xs text-gray-500 mb-4"></p>
+    <div class="space-y-4">
+      <div><label for="deliveryLink" class="block text-sm font-semibold text-gray-700 mb-1">File / Link</label><input type="text" id="deliveryLink" placeholder="Google Drive / GitHub link" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+      <div><label for="deliveryMessage" class="block text-sm font-semibold text-gray-700 mb-1">Message to Buyer</label><textarea id="deliveryMessage" rows="3" placeholder="Describe what you're delivering..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></textarea></div>
+      <p id="deliverMessageBox" class="hidden text-sm rounded-lg p-3"></p>
+      <button type="button" onclick="submitDelivery()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-sm">Submit Delivery</button>
+    </div>
+  </div>
+</div>
+
+<div id="detailsModal" class="modal" aria-hidden="true">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+    <button type="button" onclick="closeDetailsModal()" class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
+    <h2 class="text-lg font-bold text-gray-900 mb-4">Order Details</h2>
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between"><dt class="text-gray-500">Order ID</dt><dd id="detailOrderId" class="font-mono font-semibold text-gray-900"></dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Buyer</dt><dd id="detailBuyer" class="font-semibold text-gray-900"></dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Gig</dt><dd id="detailGig" class="font-semibold text-gray-900 text-right"></dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Price</dt><dd id="detailPrice" class="font-semibold text-gray-900"></dd></div>
+      <div class="flex justify-between"><dt class="text-gray-500">Status</dt><dd id="detailStatus" class="font-semibold text-emerald-700"></dd></div>
+    </dl>
+  </div>
+</div>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Modal aur elements collect karein
-    const withdrawBtn = document.getElementById("withdraw-btn");
-    const modal = document.getElementById("withdrawModal");
-    const closeModal = document.getElementById("closeModal");
-    const submitBtn = document.getElementById("submitWithdraw");
-    const balanceEl = document.getElementById("withdrawModalBalance");
-
-    // Withdraw Funds button click par modal open karein
-    if (withdrawBtn && modal) {
-      withdrawBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        modal.style.display = "flex";
-      });
+(function(){
+  // Authentication is deliberately protected so a storage error cannot stop the dashboard buttons.
+  try {
+    if (localStorage.getItem("userLoggedIn") !== "true") {
+      // Keep the dashboard usable if the browser blocks localStorage.
     }
+  } catch(e) {}
 
-    // Close (X) button click par modal band karein
-    if (closeModal && modal) {
-      closeModal.addEventListener("click", function () {
-        modal.style.display = "none";
-      });
+  let availableBalance = 45000;
+
+  function formatPKR(n){ return "PKR " + Number(n).toLocaleString("en-PK"); }
+  function updateBalances(){
+    const ids = ["overviewBalance","payoutBalance","modalBalance"];
+    ids.forEach(id => { const el=document.getElementById(id); if(el) el.textContent=formatPKR(availableBalance); });
+  }
+  function message(text, success){
+    const el=document.getElementById("withdrawMessage");
+    if(!el) return;
+    el.textContent=text;
+    el.classList.remove("hidden","bg-red-50","text-red-700","bg-emerald-50","text-emerald-700");
+    el.classList.add(success ? "bg-emerald-50" : "bg-red-50", success ? "text-emerald-700" : "text-red-700");
+  }
+
+  window.openWithdrawModal = function(){
+    const modal=document.getElementById("withdrawModal");
+    const quick=document.getElementById("quickPayoutMethod");
+    const method=document.getElementById("payoutMethod");
+    const account=document.getElementById("accountNumber");
+    const amount=document.getElementById("withdrawAmount");
+    const msg=document.getElementById("withdrawMessage");
+    if(!modal) return;
+    if(quick && method) method.value=quick.value;
+    if(account) account.value="";
+    if(amount) amount.value="";
+    if(msg) msg.classList.add("hidden");
+    updateBalances();
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+    setTimeout(function(){ if(account) account.focus(); },50);
+  };
+
+  window.closeWithdrawModal = function(){
+    const modal=document.getElementById("withdrawModal");
+    if(modal){ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); }
+  };
+
+  window.submitWithdrawal = function(){
+    const account=document.getElementById("accountNumber");
+    const amountEl=document.getElementById("withdrawAmount");
+    const method=document.getElementById("payoutMethod");
+    const accountValue=account ? account.value.trim() : "";
+    const amount=amountEl ? Number(amountEl.value) : NaN;
+    if(!accountValue){ message("براہ کرم اپنا اکاؤنٹ/والٹ نمبر درج کریں۔",false); if(account) account.focus(); return; }
+    if(!Number.isFinite(amount) || amount<1000){ message("کم از کم ود ڈرا کی رقم PKR 1,000 ہونی چاہیے۔",false); if(amountEl) amountEl.focus(); return; }
+    if(amount>availableBalance){ message("آپ کی درخواست کی رقم دستیاب بیلنس سے زیادہ ہے۔",false); if(amountEl) amountEl.focus(); return; }
+    availableBalance-=amount;
+    updateBalances();
+    const row=document.createElement("tr");
+    row.innerHTML='<td class="py-3 px-4">Just now</td><td class="py-3 px-4">Withdrawal to '+String(method.value).replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</td><td class="py-3 px-4 font-semibold text-red-600">- '+formatPKR(amount)+'</td><td class="py-3 px-4 text-xs font-medium text-gray-500">Payout</td>';
+    document.getElementById("transactionHistory").prepend(row);
+    message("آپ کی withdrawal request کامیابی سے جمع ہو گئی ہے!",true);
+    setTimeout(window.closeWithdrawModal,900);
+  };
+
+  window.openDeliverModal = function(orderId, buyer, gig, price){
+    const modal=document.getElementById("deliverModal");
+    if(!modal) return;
+    document.getElementById("deliverOrderInfo").textContent = "#"+orderId+" — "+buyer+" — "+gig+" ("+price+")";
+    document.getElementById("deliveryLink").value="";
+    document.getElementById("deliveryMessage").value="";
+    const box=document.getElementById("deliverMessageBox");
+    box.classList.add("hidden");
+    modal.dataset.orderId=orderId;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+  };
+
+  window.closeDeliverModal = function(){
+    const modal=document.getElementById("deliverModal");
+    if(modal){ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); }
+  };
+
+  window.submitDelivery = function(){
+    const modal=document.getElementById("deliverModal");
+    const link=document.getElementById("deliveryLink").value.trim();
+    const box=document.getElementById("deliverMessageBox");
+    if(!link){
+      box.textContent="براہ کرم فائل یا لنک درج کریں۔";
+      box.classList.remove("hidden","bg-emerald-50","text-emerald-700");
+      box.classList.add("bg-red-50","text-red-700");
+      return;
     }
+    const orderId=modal.dataset.orderId;
+    const statusEl=document.getElementById("status-"+orderId);
+    if(statusEl){
+      statusEl.textContent="Delivered";
+      statusEl.className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full";
+    }
+    box.textContent="Delivery submit ho gayi! Buyer ko notify kar diya gaya hai.";
+    box.classList.remove("hidden","bg-red-50","text-red-700");
+    box.classList.add("bg-emerald-50","text-emerald-700");
+    setTimeout(window.closeDeliverModal, 1200);
+  };
 
-    // Overlay ke bahar click karne par modal band karein
-    window.addEventListener("click", function (e) {
-      if (e.target === modal) {
-        modal.style.display = "none";
-      }
+  window.openDetailsModal = function(orderId, buyer, gig, price, status){
+    const modal=document.getElementById("detailsModal");
+    if(!modal) return;
+    document.getElementById("detailOrderId").textContent="#"+orderId;
+    document.getElementById("detailBuyer").textContent=buyer;
+    document.getElementById("detailGig").textContent=gig;
+    document.getElementById("detailPrice").textContent=price;
+    document.getElementById("detailStatus").textContent=status;
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+  };
+
+  window.closeDetailsModal = function(){
+    const modal=document.getElementById("detailsModal");
+    if(modal){ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); }
+  };
+
+  window.editGig = function(cardId){
+    window.location.href = "Services.html?edit=" + encodeURIComponent(cardId);
+  };
+
+  window.deleteGig = function(cardId){
+    const card = document.getElementById(cardId);
+    if(!card) return;
+    if(window.confirm("Kya aap is gig ko delete karna chahte hain?")){
+      card.remove();
+    }
+  };
+
+  window.switchTab=function(tabName){
+    document.querySelectorAll(".tab-content").forEach(el=>el.classList.add("hidden"));
+    document.querySelectorAll(".tab-btn").forEach(btn=>{
+      btn.classList.remove("border-emerald-700","text-emerald-700","font-semibold");
+      btn.classList.add("border-transparent","text-gray-500","font-medium");
     });
+    const content=document.getElementById("content-"+tabName);
+    const active=document.getElementById("tab-"+tabName);
+    if(content && active){
+      content.classList.remove("hidden");
+      active.classList.remove("border-transparent","text-gray-500","font-medium");
+      active.classList.add("border-emerald-700","text-emerald-700","font-semibold");
+    }
+  };
 
-    // Confirm Withdrawal submit handler
-    if (submitBtn) {
-      submitBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        const method = document.getElementById("payoutMethod").value;
-        const accountNum = document.getElementById("accountNumber").value.trim();
-        const amount = Number(document.getElementById("withdrawAmount").value);
-
-        if (!accountNum) {
-          alert("براہ کرم اپنا اکاؤنٹ نمبر درج کریں۔");
-          return;
-        }
-        if (!amount || isNaN(amount) || amount < 1000) {
-          alert("کم از کم ود ڈرا کی رقم PKR 1,000 ہونی چاہیے۔");
-          return;
-        }
-
-        alert(`آپ کی ${amount.toLocaleString()} PKR کی درخواست ${method} کے لیے کامیابی سے جمع ہو گئی ہے!`);
-        if (modal) modal.style.display = "none";
-      }); 
+  document.addEventListener("click",function(e){
+    if(e.target.classList && e.target.classList.contains("modal")){
+      e.target.classList.remove("show");
+      e.target.setAttribute("aria-hidden","true");
     }
   });
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){
+      document.querySelectorAll(".modal.show").forEach(function(m){
+        m.classList.remove("show");
+        m.setAttribute("aria-hidden","true");
+      });
+    }
+  });
+
+  const logout=document.getElementById("logout-btn");
+  if(logout) logout.addEventListener("click",function(){
+    try{ localStorage.removeItem("userLoggedIn"); }catch(e){}
+    window.location.href="index.html";
+  });
+
+  updateBalances();
+})();
 </script>
 </body>
 </html>
