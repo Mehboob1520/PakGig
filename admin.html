@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside class="w-60 bg-white border-r border-gray-100 shrink-0 hidden md:flex md:flex-col">
+        <div class="p-5 border-b border-gray-100">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            <p class="text-[11px] text-gray-400 mt-0.5">Admin Panel</p>
+        </div>
+        <nav class="flex-1 p-3 space-y-1 text-sm" id="sideNav">
+            <button data-tab="dashboard" class="navBtn w-full text-left px-3 py-2 rounded-lg font-semibold flex items-center gap-2 bg-emerald-50 text-emerald-700">📊 Dashboard</button>
+            <button data-tab="users" class="navBtn w-full text-left px-3 py-2 rounded-lg font-medium flex items-center gap-2 text-gray-600 hover:bg-gray-50">👥 Users</button>
+            <button data-tab="orders" class="navBtn w-full text-left px-3 py-2 rounded-lg font-medium flex items-center gap-2 text-gray-600 hover:bg-gray-50">📦 Orders</button>
+            <button data-tab="disputes" class="navBtn w-full text-left px-3 py-2 rounded-lg font-medium flex items-center gap-2 text-gray-600 hover:bg-gray-50">
+                ⚖️ Disputes <span id="disputeBadge" class="ml-auto bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+            </button>
+            <button data-tab="transactions" class="navBtn w-full text-left px-3 py-2 rounded-lg font-medium flex items-center gap-2 text-gray-600 hover:bg-gray-50">💰 Transactions</button>
+        </nav>
+        <div class="p-3 border-t border-gray-100">
+            <a href="login.html" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">🚪 Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex-1 min-w-0 flex flex-col">
+        <!-- Top bar -->
+        <header class="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between">
+            <h1 id="pageTitle" class="text-base font-bold text-gray-900">Dashboard</h1>
+            <div class="flex items-center gap-3">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed=Admin&backgroundColor=047857&textColor=ffffff" class="w-8 h-8 rounded-full" alt="Admin">
+                <span class="text-sm font-medium text-gray-700 hidden sm:inline">Admin</span>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+            <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+            <!-- ===== DASHBOARD TAB ===== -->
+            <section id="tab-dashboard" class="space-y-6">
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <p class="text-[11px] text-gray-500">Total Users</p>
+                        <p class="text-xl font-bold text-gray-900 mt-1" id="statUsers">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <p class="text-[11px] text-gray-500">Active Orders</p>
+                        <p class="text-xl font-bold text-gray-900 mt-1" id="statActiveOrders">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <p class="text-[11px] text-gray-500">Escrow Held</p>
+                        <p class="text-xl font-bold text-amber-600 mt-1" id="statEscrow">Rs. 0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <p class="text-[11px] text-gray-500">Open Disputes</p>
+                        <p class="text-xl font-bold text-red-600 mt-1" id="statDisputes">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <p class="text-[11px] text-gray-500">Platform Revenue</p>
+                        <p class="text-xl font-bold text-emerald-700 mt-1" id="statRevenue">Rs. 0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                    <h2 class="text-sm font-bold text-gray-900 mb-3">Recent Activity</h2>
+                    <ul class="text-xs text-gray-600 space-y-2" id="recentActivity"></ul>
+                </div>
+            </section>
+
+            <!-- ===== USERS TAB ===== -->
+            <section id="tab-users" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <input type="text" id="userSearch" placeholder="Search users by name or email..." class="w-full sm:w-80 px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-[11px] text-gray-500 border-b border-gray-100">
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Email</th>
+                                <th class="p-3">Role</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Joined</th>
+                                <th class="p-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ===== ORDERS TAB ===== -->
+            <section id="tab-orders" class="hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-[11px] text-gray-500 border-b border-gray-100">
+                                <th class="p-3">Order ID</th>
+                                <th class="p-3">Service</th>
+                                <th class="p-3">Buyer → Seller</th>
+                                <th class="p-3">Amount</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ===== DISPUTES TAB ===== -->
+            <section id="tab-disputes" class="hidden space-y-4">
+                <div class="space-y-3" id="disputesList"></div>
+                <div id="disputesEmpty" class="hidden text-center py-12 bg-white rounded-2xl border border-gray-100">
+                    <p class="text-sm text-gray-500">No open disputes. 🎉</p>
+                </div>
+            </section>
+
+            <!-- ===== TRANSACTIONS TAB ===== -->
+            <section id="tab-transactions" class="hidden space-y-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-[11px] text-gray-500 border-b border-gray-100">
+                                <th class="p-3">Order ID</th>
+                                <th class="p-3">Description</th>
+                                <th class="p-3">Amount</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="txTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Dispute Resolution Modal -->
+    <div id="disputeModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 px-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs text-gray-400" id="disputeOrderId">Order #—</p>
+                    <h3 class="text-base font-bold text-gray-900">Resolve Dispute</h3>
+                </div>
+                <button type="button" id="closeDisputeModal" class="text-gray-400 hover:text-gray-700 text-lg leading-none">&times;</button>
+            </div>
+
+            <div id="disputeModalAlert" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+            <div class="bg-gray-50 rounded-xl p-3 text-xs text-gray-600" id="disputeReason"></div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <p class="text-[11px] text-gray-500">Buyer</p>
+                    <p class="font-semibold text-gray-900" id="disputeBuyer">—</p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500">Seller</p>
+                    <p class="font-semibold text-gray-900" id="disputeSeller">—</p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500">Amount</p>
+                    <p class="font-semibold text-gray-900" id="disputeAmount">Rs. 0</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" id="refundBuyerBtn" class="flex-1 py-2.5 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">Refund Buyer</button>
+                <button type="button" id="releaseSellerBtn" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition">Release to Seller</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo data — replace with real GET /api/admin/* calls to your backend.
+        let users = JSON.parse(localStorage.getItem("pakgigAdminUsers") || "null") || [
+            { id: "u1", name: "Bilal Ahmed",  email: "bilal@example.com",  role: "Seller", status: "active",    joined: "2026-05-11" },
+            { id: "u2", name: "Sana Malik",   email: "sana@example.com",   role: "Seller", status: "active",    joined: "2026-04-02" },
+            { id: "u3", name: "Usman Tariq",  email: "usman@example.com",  role: "Seller", status: "active",    joined: "2026-03-18" },
+            { id: "u4", name: "Ayesha Noor",  email: "ayesha@example.com", role: "Buyer",  status: "suspended", joined: "2026-06-25" },
+            { id: "u5", name: "Hamza Sheikh", email: "hamza@example.com",  role: "Buyer",  status: "active",    joined: "2026-07-30" }
+        ];
+
+        let orders = JSON.parse(localStorage.getItem("pakgigAdminOrders") || "null") || [
+            { id: "PG-10234", title: "Modern Logo Design", buyer: "Hamza Sheikh", seller: "Bilal Ahmed", amount: 8000,  status: "in_progress" },
+            { id: "PG-10221", title: "WordPress Website",   buyer: "Ayesha Noor",  seller: "Sana Malik",  amount: 35000, status: "delivered" },
+            { id: "PG-10190", title: "SEO Audit",            buyer: "Hamza Sheikh", seller: "Usman Tariq", amount: 12000, status: "completed" },
+            { id: "PG-10177", title: "Urdu Voiceover",       buyer: "Ayesha Noor",  seller: "Sana Malik",  amount: 4000,  status: "cancelled" }
+        ];
+
+        let disputes = JSON.parse(localStorage.getItem("pakgigAdminDisputes") || "null") || [
+            {
+                id: "PG-10221",
+                title: "WordPress Website",
+                buyer: "Ayesha Noor",
+                seller: "Sana Malik",
+                amount: 35000,
+                reason: "Buyer says 2 of the 5 pages were not delivered as agreed. Seller claims the scope changed mid-project.",
+                status: "open"
+            }
+        ];
+
+        let transactions = JSON.parse(localStorage.getItem("pakgigEscrow") || "null") || [
+            { id: "PG-10234", title: "Modern Logo Design for PakGig", amount: 8000,  status: "held",     date: "2026-09-15" },
+            { id: "PG-10221", title: "WordPress Business Website",     amount: 35000, status: "held",     date: "2026-09-12" },
+            { id: "PG-10190", title: "SEO Audit & On-Page Optimization", amount: 12000, status: "released", date: "2026-09-05" },
+            { id: "PG-10177", title: "Urdu Voiceover for Ad (60 sec)", amount: 4000,  status: "refunded", date: "2026-08-30" }
+        ];
+
+        const orderStatusMeta = {
+            pending:     { label: "Pending",     badge: "bg-gray-100 text-gray-700 border-gray-200" },
+            in_progress: { label: "In Progress", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+            delivered:   { label: "Delivered",   badge: "bg-amber-50 text-amber-700 border-amber-200" },
+            completed:   { label: "Completed",   badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+            cancelled:   { label: "Cancelled",   badge: "bg-red-50 text-red-700 border-red-200" }
+        };
+
+        const txStatusMeta = {
+            held:      { label: "Held",      badge: "bg-amber-50 text-amber-700 border-amber-200" },
+            released:  { label: "Released",  badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+            refunded:  { label: "Refunded",  badge: "bg-gray-100 text-gray-600 border-gray-200" },
+            withdrawn: { label: "Withdrawn", badge: "bg-blue-50 text-blue-700 border-blue-200" }
+        };
+
+        function money(n) { return "Rs. " + Number(n).toLocaleString(); }
+        function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+        function showAlert(type, msg) {
+            const box = document.getElementById("alertBox");
+            const styles = type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800";
+            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            box.innerHTML = msg;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        // ---------- Tab switching ----------
+        function switchTab(tab) {
+            document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
+            document.getElementById("tab-" + tab).classList.remove("hidden");
+
+            document.querySelectorAll(".navBtn").forEach(btn => {
+                const active = btn.dataset.tab === tab;
+                btn.classList.toggle("bg-emerald-50", active);
+                btn.classList.toggle("text-emerald-700", active);
+                btn.classList.toggle("font-semibold", active);
+                btn.classList.toggle("text-gray-600", !active);
+            });
+
+            const titles = { dashboard: "Dashboard", users: "Users", orders: "Orders", disputes: "Disputes", transactions: "Transactions" };
+            document.getElementById("pageTitle").textContent = titles[tab];
+        }
+
+        document.getElementById("sideNav").addEventListener("click", (e) => {
+            const btn = e.target.closest(".navBtn");
+            if (btn) switchTab(btn.dataset.tab);
+        });
+
+        // ---------- Dashboard ----------
+        function renderDashboard() {
+            document.getElementById("statUsers").textContent = users.length;
+            document.getElementById("statActiveOrders").textContent =
+                orders.filter(o => o.status === "in_progress" || o.status === "delivered").length;
+
+            const heldTotal = transactions.filter(t => t.status === "held").reduce((s, t) => s + t.amount, 0);
+            document.getElementById("statEscrow").textContent = money(heldTotal);
+
+            const openDisputes = disputes.filter(d => d.status === "open").length;
+            document.getElementById("statDisputes").textContent = openDisputes;
+
+            const revenue = orders.filter(o => o.status === "completed").reduce((s, o) => s + Math.round(o.amount * 0.1), 0);
+            document.getElementById("statRevenue").textContent = money(revenue);
+
+            const badge = document.getElementById("disputeBadge");
+            if (openDisputes > 0) {
+                badge.textContent = openDisputes;
+                badge.classList.remove("hidden");
+            } else {
+                badge.classList.add("hidden");
+            }
+
+            const activity = [
+                ...orders.slice(0, 3).map(o => `Order <strong>#${o.id}</strong> — ${o.title} is ${orderStatusMeta[o.status].label.toLowerCase()}`),
+                ...disputes.filter(d => d.status === "open").map(d => `Dispute opened on <strong>#${d.id}</strong> by ${d.buyer}`)
+            ];
+            document.getElementById("recentActivity").innerHTML = activity.map(a => `<li class="border-b border-gray-50 pb-2 last:border-0">${a}</li>`).join("") || "<li>No recent activity.</li>";
+        }
+
+        // ---------- Users ----------
+        function renderUsers(filter = "") {
+            const q = filter.trim().toLowerCase();
+            const tbody = document.getElementById("usersTableBody");
+            const filtered = users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+
+            tbody.innerHTML = filtered.map(u => {
+                const suspended = u.status === "suspended";
+                const statusBadge = suspended
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200";
+                return `
+                <tr class="border-b border-gray-50 last:border-0">
+                    <td class="p-3 font-medium text-gray-900">${u.name}</td>
+                    <td class="p-3 text-gray-500">${u.email}</td>
+                    <td class="p-3 text-gray-600">${u.role}</td>
+                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusBadge}">${suspended ? "Suspended" : "Active"}</span></td>
+                    <td class="p-3 text-gray-500">${u.joined}</td>
+                    <td class="p-3 text-right">
+                        <button data-id="${u.id}" class="toggleUserBtn text-xs font-semibold ${suspended ? "text-emerald-700" : "text-red-600"} hover:underline">
+                            ${suspended ? "Reactivate" : "Suspend"}
+                        </button>
+                    </td>
+                </tr>`;
+            }).join("") || `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">No users found.</td></tr>`;
+
+            tbody.querySelectorAll(".toggleUserBtn").forEach(btn => {
+                btn.addEventListener("click", () => toggleUserStatus(btn.dataset.id));
+            });
+        }
+
+        function toggleUserStatus(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            const willSuspend = user.status !== "suspended";
+
+            if (willSuspend && !confirm(`Suspend ${user.name}'s account? They won't be able to log in.`)) return;
+
+            // demo only — replace with: fetch(`/api/admin/users/${id}/status`, { method: 'PATCH', body: {...} })
+            user.status = willSuspend ? "suspended" : "active";
+            save("pakgigAdminUsers", users);
+            renderUsers(document.getElementById("userSearch").value);
+            showAlert("success", `${user.name} has been ${willSuspend ? "suspended" : "reactivated"}.`);
+        }
+
+        document.getElementById("userSearch").addEventListener("input", (e) => renderUsers(e.target.value));
+
+        // ---------- Orders ----------
+        function renderOrdersTable() {
+            const tbody = document.getElementById("ordersTableBody");
+            tbody.innerHTML = orders.map(o => {
+                const s = orderStatusMeta[o.status];
+                return `
+                <tr class="border-b border-gray-50 last:border-0">
+                    <td class="p-3 text-gray-500">#${o.id}</td>
+                    <td class="p-3 font-medium text-gray-900">${o.title}</td>
+                    <td class="p-3 text-gray-600">${o.buyer} → ${o.seller}</td>
+                    <td class="p-3 font-semibold text-gray-900">${money(o.amount)}</td>
+                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span></td>
+                    <td class="p-3 text-right"><a href="order.html" class="text-xs font-semibold text-emerald-700 hover:underline">View →</a></td>
+                </tr>`;
+            }).join("");
+        }
+
+        // ---------- Disputes ----------
+        function renderDisputes() {
+            const list = document.getElementById("disputesList");
+            const empty = document.getElementById("disputesEmpty");
+            const open = disputes.filter(d => d.status === "open");
+
+            if (open.length === 0) {
+                list.innerHTML = "";
+                empty.classList.remove("hidden");
+                return;
+            }
+            empty.classList.add("hidden");
+
+            list.innerHTML = open.map(d => `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-400">#${d.id}</p>
+                        <p class="font-semibold text-gray-900 text-sm">${d.title}</p>
+                        <p class="text-xs text-gray-500 mt-1">${d.buyer} vs ${d.seller} &middot; ${money(d.amount)}</p>
+                    </div>
+                    <button data-id="${d.id}" class="reviewDisputeBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition">
+                        Review Dispute
+                    </button>
+                </div>
+            `).join("");
+
+            list.querySelectorAll(".reviewDisputeBtn").forEach(btn => {
+                btn.addEventListener("click", () => openDisputeModal(btn.dataset.id));
+            });
+        }
+
+        let activeDisputeId = null;
+
+        function openDisputeModal(id) {
+            const d = disputes.find(x => x.id === id);
+            if (!d) return;
+            activeDisputeId = id;
+
+            document.getElementById("disputeModalAlert").className = "hidden";
+            document.getElementById("disputeOrderId").textContent = "Order #" + d.id;
+            document.getElementById("disputeReason").textContent = d.reason;
+            document.getElementById("disputeBuyer").textContent = d.buyer;
+            document.getElementById("disputeSeller").textContent = d.seller;
+            document.getElementById("disputeAmount").textContent = money(d.amount);
+
+            const modal = document.getElementById("disputeModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeDisputeModal() {
+            document.getElementById("disputeModal").classList.add("hidden");
+            document.getElementById("disputeModal").classList.remove("flex");
+            activeDisputeId = null;
+        }
+
+        function resolveDispute(resolution) {
+            const d = disputes.find(x => x.id === activeDisputeId);
+            if (!d) return;
+
+            // demo only — replace with: fetch(`/api/admin/disputes/${d.id}/resolve`, { method: 'POST', body: { resolution } })
+            d.status = "resolved";
+            const tx = transactions.find(t => t.id === d.id);
+            if (tx) tx.status = resolution === "refund" ? "refunded" : "released";
+
+            const order = orders.find(o => o.id === d.id);
+            if (order) order.status = resolution === "refund" ? "cancelled" : "completed";
+
+            save("pakgigAdminDisputes", disputes);
+            save("pakgigEscrow", transactions);
+            save("pakgigAdminOrders", orders);
+
+            closeDisputeModal();
+            renderDisputes();
+            renderDashboard();
+            renderOrdersTable();
+            showAlert("success", `Dispute #${d.id} resolved — funds ${resolution === "refund" ? "refunded to buyer" : "released to seller"}.`);
+        }
+
+        document.getElementById("closeDisputeModal").addEventListener("click", closeDisputeModal);
+        document.getElementById("disputeModal").addEventListener("click", (e) => {
+            if (e.target.id === "disputeModal") closeDisputeModal();
+        });
+        document.getElementById("refundBuyerBtn").addEventListener("click", () => {
+            if (confirm("Refund the full amount to the buyer?")) resolveDispute("refund");
+        });
+        document.getElementById("releaseSellerBtn").addEventListener("click", () => {
+            if (confirm("Release the full amount to the seller?")) resolveDispute("release");
+        });
+
+        // ---------- Transactions ----------
+        function renderTxTable() {
+            const tbody = document.getElementById("txTableBody");
+            tbody.innerHTML = transactions.map(t => {
+                const s = txStatusMeta[t.status];
+                return `
+                <tr class="border-b border-gray-50 last:border-0">
+                    <td class="p-3 text-gray-500">#${t.id}</td>
+                    <td class="p-3 font-medium text-gray-900">${t.title}</td>
+                    <td class="p-3 font-semibold text-gray-900">${money(t.amount)}</td>
+                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span></td>
+                    <td class="p-3 text-gray-500">${t.date}</td>
+                </tr>`;
+            }).join("");
+        }
+
+        // ---------- Init ----------
+        renderDashboard();
+        renderUsers();
+        renderOrdersTable();
+        renderDisputes();
+        renderTxTable();
+    </script>
+</body>
+</html>
