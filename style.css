@@ -1,0 +1,67 @@
+/* ==========================================================================
+   PakGig — Shared Stylesheet
+   Tailwind (via CDN script in each HTML <head>) handles all utility classes.
+   This file only holds the small bits Tailwind's CDN build can't do:
+   the custom font import and a couple of hand-rolled component tweaks.
+   Link it in every page's <head>, AFTER the Tailwind CDN <script> tag:
+       <link rel="stylesheet" href="css/style.css">
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --pg-emerald-50:  #ecfdf5;
+    --pg-emerald-100: #a7f3d0;
+    --pg-emerald-700: #047857;
+    --pg-emerald-800: #065f46;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Thin scrollbars used inside chat panes (messages.html) and any other
+   scrollable container that opts in with this class. */
+.chat-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Smooth open/close for <details> "How it works" style accordions
+   (escrow.html) — Tailwind's CDN build has no @keyframes support, so this
+   stays in plain CSS. */
+details > summary {
+    list-style: none;
+}
+details > summary::-webkit-details-marker {
+    display: none;
+}
+details[open] summary ~ * {
+    animation: pg-fade-in 0.2s ease-in-out;
+}
+@keyframes pg-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Consistent focus ring for anything not already using Tailwind's
+   focus:ring utilities (e.g. custom buttons, third-party widgets). */
+.pg-focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--pg-emerald-700);
+}
+
+/* Utility: truncate to 2 lines (service cards, review snippets) — not
+   available as a Tailwind CDN utility without the line-clamp plugin. */
+.pg-line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
