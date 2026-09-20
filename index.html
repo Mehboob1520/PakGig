@@ -34,16 +34,17 @@
             <nav class="flex items-center gap-4 text-sm font-medium">
                 <a href="Services.html" class="hidden sm:block text-gray-600 hover:text-emerald-700">Explore Services</a>
                 <a href="signup.html" class="hidden sm:block text-gray-600 hover:text-emerald-700">Become a Seller</a>
-                <div id="auth-buttons" class="flex items-center space-x-4">
+                <div id="auth-buttons" class="flex items-center space-x-4 invisible">
     <a href="login.html" class="text-sm font-semibold text-gray-700 hover:text-emerald-700">Sign In</a>
     <a href="signup.html" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded-full">Join Free</a>
 </div>
 
 <div id="user-profile-menu" class="hidden items-center space-x-4">
     <a href="dashboard.html" class="text-sm font-semibold text-emerald-700 hover:underline">Dashboard</a>
-    <div class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
-        M
-    </div>
+    <a href="profile.html" title="My Profile" class="flex items-center gap-2 group">
+        <span id="navAvatar" class="w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">U</span>
+        <span id="navName" class="hidden md:block text-sm font-semibold text-gray-700 group-hover:text-emerald-700">Profile</span>
+    </a>
 </div>
             </nav>
         </div>
@@ -256,20 +257,21 @@
     button.addEventListener('click', function(e) {
       e.preventDefault();
       const cardTitle = this.closest('.card')?.querySelector('h4, h3')?.innerText || 'Freelance Service';
-      openEscrowModal(cardTitle);
+      window.location.href = 'Services.html';
     });
   });
-    const isLoggedIn = localStorage.getItem("userLoggedIn");
-  const authButtons = document.getElementById("auth-buttons");
-  const userMenu = document.getElementById("user-profile-menu");
 
-  if (isLoggedIn === "true") {
-    if (authButtons) authButtons.classList.add("hidden");
-    if (userMenu) {
-      userMenu.classList.remove("hidden");
-      userMenu.classList.add("flex");
-    }
-  }
+</script>
+<script>
+    // Agar Firebase load na ho to bhi Sign In / Join Free 3 second baad nazar aa jayein
+    setTimeout(function () {
+        var b = document.getElementById("auth-buttons");
+        if (b) b.classList.remove("invisible");
+    }, 3000);
+</script>
+<script type="module">
+    import { bindNavbar } from "./js/session.js";
+    bindNavbar();
 </script>
 </body>
 </html>
