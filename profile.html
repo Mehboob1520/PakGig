@@ -20,7 +20,7 @@
                 <a href="Services.html" class="hover:text-emerald-700">Services</a>
                 <a href="order.html" class="hover:text-emerald-700">Orders</a>
                 <a href="profile.html" class="text-emerald-700">Profile</a>
-                <a href="login.html" class="hover:text-red-600">Logout</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
             </div>
         </div>
     </nav>
@@ -92,7 +92,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
-                            <input type="email" id="email" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="name@example.com">
+                            <input type="email" id="email" required readonly title="Email cannot be changed here" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="name@example.com">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Phone Number</label>
@@ -143,118 +143,162 @@
 
                     <hr class="border-gray-100">
 
-                    <a href="login.html" class="block text-xs font-semibold text-emerald-700 hover:underline">Change Password →</a>
+                    <button type="button" id="changePwBtn" class="block text-xs font-semibold text-emerald-700 hover:underline">Change Password →</button>
                     <button type="button" id="deleteAccountBtn" class="block text-xs font-semibold text-red-600 hover:underline">Delete Account</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-        // --- Load saved profile (demo: localStorage; replace with a real
-        // GET /api/profile call to your backend) ---
-        function loadProfile() {
-            const saved = JSON.parse(localStorage.getItem("pakgigProfile") || "{}");
+    <script type="module">
+        import { requireLogin, bindLogout, friendlyAuthError } from "./js/session.js";
+        import { auth, db } from "./js/firebase.js";
+        import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import {
+            updateProfile, sendPasswordResetEmail, deleteUser,
+            reauthenticateWithCredential, EmailAuthProvider
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-            document.getElementById("fullName").value  = saved.fullName  || "";
-            document.getElementById("tagline").value   = saved.tagline   || "";
-            document.getElementById("email").value     = saved.email    || "";
-            document.getElementById("phone").value     = saved.phone    || "";
-            document.getElementById("city").value      = saved.city     || "";
-            document.getElementById("skills").value    = saved.skills   || "";
-            document.getElementById("bio").value       = saved.bio      || "";
+        bindLogout();
 
-            document.getElementById("displayName").textContent    = saved.fullName || "Your Name";
-            document.getElementById("displayTagline").textContent = saved.tagline || "Add a short professional tagline";
-            document.getElementById("memberSince").textContent    = saved.memberSince || new Date().toLocaleDateString();
-            document.getElementById("statOrders").textContent     = saved.stats?.orders  ?? 0;
-            document.getElementById("statActive").textContent     = saved.stats?.active  ?? 0;
-            document.getElementById("statEscrow").textContent     = "Rs. " + (saved.stats?.escrow ?? 0);
-            document.getElementById("reviewCount").textContent    = saved.stats?.reviews ?? 0;
-        }
+        const $ = (id) => document.getElementById(id);
+        let currentUser = null;
+        let saved = {};
 
         function showAlert(type, msg) {
-            const alertBox = document.getElementById("alertBox");
             const styles = type === "success"
                 ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                 : "bg-red-50 border-red-200 text-red-800";
-            alertBox.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
-            alertBox.innerHTML = msg;
+            const box = $("alertBox");
+            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            box.textContent = msg;
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
-        // Avatar preview (client-side only; upload to backend separately)
-        document.getElementById("avatarInput").addEventListener("change", (e) => {
+        function render() {
+            $("fullName").value = saved.fullName || "";
+            $("tagline").value  = saved.tagline  || "";
+            $("email").value    = currentUser.email || "";
+            $("phone").value    = saved.phone    || "";
+            $("city").value     = saved.city     || "";
+            $("skills").value   = saved.skills   || "";
+            $("bio").value      = saved.bio      || "";
+
+            $("displayName").textContent    = saved.fullName || "Your Name";
+            $("displayTagline").textContent = saved.tagline  || "Add a short professional tagline";
+
+            const created = currentUser.metadata && currentUser.metadata.creationTime;
+            $("memberSince").textContent = created ? new Date(created).toLocaleDateString() : "—";
+
+            const role = saved.role || "buyer";
+            $("accountType").textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+            if (currentUser.emailVerified) {
+                const badge = $("verifiedBadge");
+                badge.textContent = "Verified";
+                badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
+            }
+        }
+
+        async function loadProfile() {
+            const ref = doc(db, "users", currentUser.uid);
+            try {
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                    saved = snap.data();
+                } else {
+                    // Account created outside signup.html (e.g. in the Firebase Console)
+                    saved = {
+                        fullName: currentUser.displayName || (currentUser.email || "").split("@")[0],
+                        email: currentUser.email,
+                        role: "buyer"
+                    };
+                    await setDoc(ref, Object.assign({}, saved, { createdAt: serverTimestamp() }));
+                }
+            } catch (err) {
+                saved = { fullName: currentUser.displayName || "", role: "buyer" };
+                showAlert("error", "Could not load your saved profile. Check your connection and that the Firestore rules are published.");
+            }
+            render();
+        }
+
+        // Avatar preview (client-side only; upload to storage separately)
+        $("avatarInput").addEventListener("change", (e) => {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById("avatarPreview").src = ev.target.result;
-            };
+            reader.onload = (ev) => { $("avatarPreview").src = ev.target.result; };
             reader.readAsDataURL(file);
         });
 
-        document.getElementById("profileForm").addEventListener("submit", (e) => {
+        $("profileForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const saveBtn = document.getElementById("saveBtn");
-
-            const fullName = document.getElementById("fullName").value.trim();
-            const email    = document.getElementById("email").value.trim();
-            const emailOk  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+            const saveBtn = $("saveBtn");
+            const fullName = $("fullName").value.trim();
 
             if (!fullName) {
                 showAlert("error", "Please enter your full name.");
                 return;
             }
-            if (!emailOk) {
-                showAlert("error", "Please enter a valid email address.");
-                return;
-            }
 
             saveBtn.disabled = true;
-            saveBtn.innerHTML = "Saving...";
+            saveBtn.textContent = "Saving...";
 
-            const profile = {
-                fullName,
-                tagline: document.getElementById("tagline").value.trim(),
-                email,
-                phone: document.getElementById("phone").value.trim(),
-                city: document.getElementById("city").value.trim(),
-                skills: document.getElementById("skills").value.trim(),
-                bio: document.getElementById("bio").value.trim(),
-                memberSince: document.getElementById("memberSince").textContent,
-                stats: {
-                    orders: document.getElementById("statOrders").textContent,
-                    active: document.getElementById("statActive").textContent,
-                    escrow: document.getElementById("statEscrow").textContent.replace("Rs. ", ""),
-                    reviews: document.getElementById("reviewCount").textContent,
-                }
+            const updates = {
+                fullName: fullName,
+                tagline: $("tagline").value.trim(),
+                phone: $("phone").value.trim(),
+                city: $("city").value.trim(),
+                skills: $("skills").value.trim(),
+                bio: $("bio").value.trim()
             };
 
-            // demo only — replace with: fetch('/api/profile', { method: 'PUT', ... })
-            setTimeout(() => {
-                localStorage.setItem("pakgigProfile", JSON.stringify(profile));
-                document.getElementById("displayName").textContent    = fullName;
-                document.getElementById("displayTagline").textContent = profile.tagline || "Add a short professional tagline";
-
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), updates, { merge: true });
+                await updateProfile(currentUser, { displayName: fullName });
+                saved = Object.assign({}, saved, updates);
+                $("displayName").textContent = fullName;
+                $("displayTagline").textContent = updates.tagline || "Add a short professional tagline";
                 showAlert("success", "Profile updated successfully.");
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = "Save Changes";
-            }, 800);
+            } catch (err) {
+                showAlert("error", "Could not save your profile. Please try again.");
+            }
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Save Changes";
         });
 
-        document.getElementById("cancelBtn").addEventListener("click", loadProfile);
+        $("cancelBtn").addEventListener("click", render);
 
-        document.getElementById("deleteAccountBtn").addEventListener("click", () => {
-            if (confirm("Are you sure you want to permanently delete your PakGig account? This cannot be undone.")) {
-                // demo only — replace with: fetch('/api/profile', { method: 'DELETE' })
-                localStorage.removeItem("pakgigProfile");
-                localStorage.removeItem("userLoggedIn");
-                window.location.href = "index.html";
+        $("changePwBtn").addEventListener("click", async () => {
+            try {
+                await sendPasswordResetEmail(auth, currentUser.email);
+                showAlert("success", "Password reset link sent to " + currentUser.email + ".");
+            } catch (err) {
+                showAlert("error", friendlyAuthError(err.code));
             }
         });
 
-        loadProfile();
+        $("deleteAccountBtn").addEventListener("click", async () => {
+            if (!confirm("Are you sure you want to permanently delete your PakGig account? This cannot be undone.")) return;
+            const password = prompt("Enter your password to confirm:");
+            if (!password) return;
+
+            try {
+                const credential = EmailAuthProvider.credential(currentUser.email, password);
+                await reauthenticateWithCredential(currentUser, credential);
+                await deleteDoc(doc(db, "users", currentUser.uid));
+                await deleteUser(currentUser);
+                ["userLoggedIn", "userRole", "pakgigProfile"].forEach((k) => localStorage.removeItem(k));
+                window.location.href = "index.html";
+            } catch (err) {
+                showAlert("error", friendlyAuthError(err.code));
+            }
+        });
+
+        requireLogin().then(async (res) => {
+            currentUser = res.user;
+            await loadProfile();
+        });
     </script>
 </body>
 </html>
