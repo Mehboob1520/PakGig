@@ -23,7 +23,7 @@
                 <a href="order.html" class="hover:text-emerald-700">Orders</a>
                 <a href="messages.html" class="text-emerald-700">Messages</a>
                 <a href="profile.html" class="hover:text-emerald-700">Profile</a>
-                <a href="login.html" class="hover:text-red-600">Logout</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
             </div>
         </div>
     </nav>
@@ -71,185 +71,157 @@
         </div>
     </main>
 
-    <script>
-        // Demo data — replace with a real GET /api/conversations + WebSocket/
-        // polling for live messages from your backend.
-        let conversations = JSON.parse(localStorage.getItem("pakgigConversations") || "null") || [
-            {
-                id: "c1",
-                name: "Bilal Ahmed",
-                seed: "Bilal",
-                orderId: "PG-10234",
-                messages: [
-                    { sender: "them", text: "Hi! I've started working on your logo concepts.", time: "10:02 AM" },
-                    { sender: "me", text: "Great, looking forward to seeing them!", time: "10:05 AM" },
-                    { sender: "them", text: "I'll share the first drafts by tomorrow evening.", time: "10:06 AM" }
-                ]
-            },
-            {
-                id: "c2",
-                name: "Sana Malik",
-                seed: "Sana",
-                orderId: "PG-10221",
-                messages: [
-                    { sender: "them", text: "Your website is delivered. Please review the pages.", time: "Yesterday" },
-                    { sender: "me", text: "Checking it now, thank you!", time: "Yesterday" }
-                ]
-            },
-            {
-                id: "c3",
-                name: "Usman Tariq",
-                seed: "Usman",
-                orderId: "PG-10190",
-                messages: [
-                    { sender: "them", text: "Thanks for the 5-star review!", time: "Mon" },
-                    { sender: "me", text: "You earned it, great work on the SEO audit.", time: "Mon" }
-                ]
-            }
-        ];
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { watchMyOrders, watchMessages, sendMessage, formatTime } from "./js/data.js";
+import { esc, shortId, roleIn } from "./js/ledger.js";
 
-        let activeId = null;
+bindLogout();
 
-        function saveConversations() {
-            localStorage.setItem("pakgigConversations", JSON.stringify(conversations));
-        }
+const $ = (id) => document.getElementById(id);
 
-        function avatarUrl(seed) {
-            return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=047857&textColor=ffffff`;
-        }
+let me = null;
+let myName = "";
+let conversations = [];   // one per order
+let activeId = null;
+let messages = [];
+let stopMessages = null;
 
-        function lastMessage(convo) {
-            return convo.messages[convo.messages.length - 1] || { text: "", time: "" };
-        }
+// File sharing is not built yet — hide the paperclip instead of pretending to upload.
+const attach = $("attachInput");
+if (attach) {
+    const wrapper = attach.closest("label") || attach.parentElement;
+    if (wrapper) wrapper.classList.add("hidden");
+}
 
-        function renderConversationList(filter = "") {
-            const listEl = document.getElementById("conversationList");
-            const q = filter.trim().toLowerCase();
+function avatarUrl(seed) {
+    return "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(seed) + "&backgroundColor=047857&textColor=ffffff";
+}
 
-            const filtered = conversations.filter(c => c.name.toLowerCase().includes(q));
+function otherName(o) {
+    return roleIn(o, me.uid) === "seller" ? o.buyerName : o.sellerName;
+}
 
-            listEl.innerHTML = filtered.map(c => {
-                const last = lastMessage(c);
-                const active = c.id === activeId ? "bg-emerald-50" : "hover:bg-gray-50";
-                return `
-                <button data-id="${c.id}" class="convoBtn w-full text-left p-3.5 flex items-center gap-3 ${active} transition">
-                    <img src="${avatarUrl(c.seed)}" class="w-10 h-10 rounded-full shrink-0" alt="${c.name}">
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-semibold text-gray-900 truncate">${c.name}</p>
-                            <span class="text-[10px] text-gray-400 shrink-0">${last.time || ""}</span>
-                        </div>
-                        <p class="text-xs text-gray-500 truncate">${last.text || "No messages yet"}</p>
-                    </div>
-                </button>`;
-            }).join("") || `<p class="text-xs text-gray-400 text-center py-8">No conversations found.</p>`;
+function renderConversationList(filter) {
+    const q = (filter || "").trim().toLowerCase();
+    const list = conversations.filter((o) =>
+        otherName(o).toLowerCase().includes(q) || String(o.title).toLowerCase().includes(q));
 
-            listEl.querySelectorAll(".convoBtn").forEach(btn => {
-                btn.addEventListener("click", () => openConversation(btn.dataset.id));
-            });
-        }
+    $("conversationList").innerHTML = list.map((o) => {
+        const active = o.id === activeId ? "bg-emerald-50" : "hover:bg-gray-50";
+        return `
+        <button data-id="${esc(o.id)}" class="convoBtn w-full text-left p-3.5 flex items-center gap-3 ${active} transition">
+            <img src="${avatarUrl(otherName(o))}" class="w-10 h-10 rounded-full shrink-0" alt="">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-2">
+                    <p class="text-sm font-semibold text-gray-900 truncate">${esc(otherName(o))}</p>
+                    <span class="text-[10px] text-gray-400 shrink-0">#${esc(shortId(o.id))}</span>
+                </div>
+                <p class="text-xs text-gray-500 truncate">${esc(o.title)}</p>
+            </div>
+        </button>`;
+    }).join("") || `<p class="text-xs text-gray-400 text-center py-8 px-4">No conversations yet. A chat appears here once you place or receive an order.</p>`;
+}
 
-        function renderMessages(convo) {
-            const area = document.getElementById("messagesArea");
-            area.innerHTML = convo.messages.map(m => {
-                const isMe = m.sender === "me";
-                return `
-                <div class="flex ${isMe ? "justify-end" : "justify-start"}">
-                    <div class="max-w-[75%] ${isMe ? "bg-emerald-700 text-white" : "bg-white text-gray-800 border border-gray-200"} rounded-2xl px-4 py-2 text-sm shadow-sm">
-                        <p>${m.text}</p>
-                        <p class="text-[10px] mt-1 ${isMe ? "text-emerald-100" : "text-gray-400"}">${m.time}</p>
-                    </div>
-                </div>`;
-            }).join("");
-            area.scrollTop = area.scrollHeight;
-        }
+function renderMessages() {
+    const area = $("messagesArea");
+    area.innerHTML = messages.map((m) => {
+        const isMe = m.senderId === me.uid;
+        return `
+        <div class="flex ${isMe ? "justify-end" : "justify-start"}">
+            <div class="max-w-[75%] ${isMe ? "bg-emerald-700 text-white" : "bg-white text-gray-800 border border-gray-200"} rounded-2xl px-4 py-2 text-sm shadow-sm">
+                <p class="whitespace-pre-wrap break-words">${esc(m.text)}</p>
+                <p class="text-[10px] mt-1 ${isMe ? "text-emerald-100" : "text-gray-400"}">${esc(formatTime(m.createdAt))}</p>
+            </div>
+        </div>`;
+    }).join("");
+    area.scrollTop = area.scrollHeight;
+}
 
-        function openConversation(id) {
-            const convo = conversations.find(c => c.id === id);
-            if (!convo) return;
-            activeId = id;
+function openConversation(id) {
+    const o = conversations.find((x) => x.id === id);
+    if (!o) return;
+    activeId = id;
 
-            document.getElementById("noChatState").classList.add("hidden");
-            document.getElementById("messagesArea").classList.remove("hidden");
-            document.getElementById("messageForm").classList.remove("hidden");
-            document.getElementById("messageForm").classList.add("flex");
+    $("noChatState").classList.add("hidden");
+    $("messagesArea").classList.remove("hidden");
+    $("messageForm").classList.remove("hidden");
+    $("messageForm").classList.add("flex");
 
-            document.getElementById("chatAvatar").src = avatarUrl(convo.seed);
-            document.getElementById("chatName").textContent = convo.name;
+    $("chatAvatar").src = avatarUrl(otherName(o));
+    $("chatName").textContent = otherName(o);
 
-            const orderLink = document.getElementById("chatOrderLink");
-            if (convo.orderId) {
-                orderLink.href = "order.html?order=" + convo.orderId;
-                orderLink.textContent = "Order #" + convo.orderId + " →";
-                orderLink.classList.remove("hidden");
-            } else {
-                orderLink.classList.add("hidden");
-            }
+    const link = $("chatOrderLink");
+    link.href = "order.html?order=" + encodeURIComponent(o.id);
+    link.textContent = "Order #" + shortId(o.id) + " →";
+    link.classList.remove("hidden");
 
-            renderMessages(convo);
-            renderConversationList(document.getElementById("searchConvo").value);
+    if (stopMessages) stopMessages();
+    messages = [];
+    renderMessages();
+    stopMessages = watchMessages(o.id, (data) => {
+        messages = data;
+        renderMessages();
+    }, () => {
+        $("messagesArea").innerHTML = `<p class="text-xs text-red-600 text-center py-6">Could not load messages. Check your connection and the Firestore rules.</p>`;
+    });
 
-            // Mobile: switch to chat view
-            if (window.innerWidth < 640) {
-                document.getElementById("conversationPane").classList.add("hidden");
-                document.getElementById("chatPane").classList.remove("hidden");
-            }
-        }
+    renderConversationList($("searchConvo").value);
 
-        document.getElementById("backToList").addEventListener("click", () => {
-            document.getElementById("conversationPane").classList.remove("hidden");
-            document.getElementById("chatPane").classList.add("hidden");
-        });
+    if (window.innerWidth < 640) {
+        $("conversationPane").classList.add("hidden");
+        $("chatPane").classList.remove("hidden");
+    }
+}
 
-        document.getElementById("searchConvo").addEventListener("input", (e) => {
-            renderConversationList(e.target.value);
-        });
+$("conversationList").addEventListener("click", (e) => {
+    const btn = e.target.closest(".convoBtn");
+    if (btn) openConversation(btn.dataset.id);
+});
 
-        document.getElementById("messageForm").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const input = document.getElementById("messageInput");
-            const text = input.value.trim();
-            if (!text || !activeId) return;
+$("backToList").addEventListener("click", () => {
+    $("conversationPane").classList.remove("hidden");
+    $("chatPane").classList.add("hidden");
+});
 
-            const convo = conversations.find(c => c.id === activeId);
-            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+$("searchConvo").addEventListener("input", (e) => renderConversationList(e.target.value));
 
-            // demo only — replace with: fetch(`/api/conversations/${activeId}/messages`, { method: 'POST', body: {...} })
-            convo.messages.push({ sender: "me", text, time });
-            saveConversations();
+$("messageForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = $("messageInput");
+    const text = input.value.trim();
+    if (!text || !activeId) return;
+    input.value = "";
+    try {
+        await sendMessage(activeId, me, myName, text.slice(0, 2000));
+    } catch (err) {
+        input.value = text; // give the text back so nothing is lost
+        alert("Message could not be sent. Please try again.");
+    }
+});
 
-            input.value = "";
-            renderMessages(convo);
-            renderConversationList(document.getElementById("searchConvo").value);
-        });
+let firstLoad = true;
+requireLogin().then((res) => {
+    me = res.user;
+    myName = me.displayName || (me.email || "").split("@")[0];
 
-        document.getElementById("attachInput").addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (!file || !activeId) return;
-            const convo = conversations.find(c => c.id === activeId);
-            const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    watchMyOrders(me.uid, (data) => {
+        conversations = data;
+        renderConversationList($("searchConvo").value);
 
-            // demo only — replace with real file upload to your backend/storage
-            convo.messages.push({ sender: "me", text: "📎 " + file.name, time });
-            saveConversations();
-            renderMessages(convo);
-            renderConversationList(document.getElementById("searchConvo").value);
-            e.target.value = "";
-        });
-
-        // Auto-open a conversation if arriving from order.html?order=PG-XXXXX
-        (function init() {
-            renderConversationList();
-            const params = new URLSearchParams(window.location.search);
-            const orderId = params.get("order");
-            const match = orderId ? conversations.find(c => c.orderId === orderId) : null;
-
-            if (match) {
-                openConversation(match.id);
+        if (firstLoad) {
+            firstLoad = false;
+            const wanted = new URLSearchParams(window.location.search).get("order");
+            if (wanted && conversations.some((o) => o.id === wanted)) {
+                openConversation(wanted);
             } else if (window.innerWidth >= 640 && conversations.length) {
                 openConversation(conversations[0].id);
             }
-        })();
+        }
+    }, () => {
+        $("conversationList").innerHTML = `<p class="text-xs text-red-600 text-center py-8 px-4">Could not load conversations. Check your connection and the Firestore rules.</p>`;
+    });
+});
     </script>
 </body>
 </html>
