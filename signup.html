@@ -31,7 +31,7 @@
         <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
 
         <!-- Signup Form -->
-        <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-4">
+        <form id="signupForm" class="space-y-4">
             <input type="hidden" id="userRole" value="buyer">
 
             <div>
@@ -90,26 +90,63 @@
                 btnBuyer.className = "py-2.5 rounded-lg text-gray-600 hover:text-emerald-700 transition";
             }
         }
+    </script>
+    <script type="module">
+        import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { auth, db, isConfigured } from "./js/firebase.js";
+        import { friendlyAuthError } from "./js/session.js";
 
-        function handleSignup(e) {
+        const alertBox = document.getElementById("alertBox");
+        const submitBtn = document.getElementById("submitBtn");
+
+        function showAlert(type, message) {
+            const styles = type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800";
+            alertBox.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            alertBox.textContent = message;
+        }
+
+        if (!isConfigured) {
+            showAlert("error", "Firebase is not set up yet. Paste your Firebase config into js/firebase.js.");
+        }
+
+        document.getElementById("signupForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const alertBox = document.getElementById('alertBox');
-            const submitBtn = document.getElementById('submitBtn');
-            const name = document.getElementById('fullName').value;
+            if (!isConfigured) return;
+
+            const name = document.getElementById("fullName").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("userRole").value === "seller" ? "seller" : "buyer";
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = "Creating account...";
+            submitBtn.textContent = "Creating account...";
+            alertBox.className = "hidden";
 
-            setTimeout(() => {
-                alertBox.className = "p-3 rounded-lg text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800 block";
-                alertBox.innerHTML = `Welcome ${name}! Account created successfully. Redirecting to Login...`;
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(cred.user, { displayName: name });
 
-                setTimeout(() => {
-                    localStorage.setItem("userLoggedIn", "true");
-                    window.location.href = "Services.html";
-                }, 1500);
-            }, 1000);
-        }
+                // Profile document. If this fails (e.g. rules not published yet) the
+                // account still works; profile.html creates the document on first visit.
+                try {
+                    await setDoc(doc(db, "users", cred.user.uid), {
+                        fullName: name, email: email, role: role, createdAt: serverTimestamp()
+                    });
+                } catch (docErr) { console.warn("Profile document not saved:", docErr); }
+
+                try { await sendEmailVerification(cred.user); } catch (mailErr) {}
+
+                showAlert("success", "Welcome " + name + "! Account created. Redirecting...");
+                setTimeout(() => { window.location.href = "Services.html"; }, 1200);
+            } catch (err) {
+                showAlert("error", friendlyAuthError(err.code));
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Create Account";
+            }
+        });
     </script>
 </body>
 </html>
