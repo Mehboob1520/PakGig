@@ -28,7 +28,7 @@
             <button data-tab="transactions" class="navBtn w-full text-left px-3 py-2 rounded-lg font-medium flex items-center gap-2 text-gray-600 hover:bg-gray-50">💰 Transactions</button>
         </nav>
         <div class="p-3 border-t border-gray-100">
-            <a href="login.html" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">🚪 Logout</a>
+            <a href="login.html" data-logout class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">🚪 Logout</a>
         </div>
     </aside>
 
@@ -183,298 +183,332 @@
         </div>
     </div>
 
-    <script>
-        // Demo data — replace with real GET /api/admin/* calls to your backend.
-        let users = JSON.parse(localStorage.getItem("pakgigAdminUsers") || "null") || [
-            { id: "u1", name: "Bilal Ahmed",  email: "bilal@example.com",  role: "Seller", status: "active",    joined: "2026-05-11" },
-            { id: "u2", name: "Sana Malik",   email: "sana@example.com",   role: "Seller", status: "active",    joined: "2026-04-02" },
-            { id: "u3", name: "Usman Tariq",  email: "usman@example.com",  role: "Seller", status: "active",    joined: "2026-03-18" },
-            { id: "u4", name: "Ayesha Noor",  email: "ayesha@example.com", role: "Buyer",  status: "suspended", joined: "2026-06-25" },
-            { id: "u5", name: "Hamza Sheikh", email: "hamza@example.com",  role: "Buyer",  status: "active",    joined: "2026-07-30" }
-        ];
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { watchAllOrders, watchAllWithdrawals, listUsers, setUserStatus, orderAction, markWithdrawalPaid, formatDate } from "./js/data.js";
+import { esc, money, shortId, feeFor, STATUS_META, sellerTotals, availableActions } from "./js/ledger.js";
 
-        let orders = JSON.parse(localStorage.getItem("pakgigAdminOrders") || "null") || [
-            { id: "PG-10234", title: "Modern Logo Design", buyer: "Hamza Sheikh", seller: "Bilal Ahmed", amount: 8000,  status: "in_progress" },
-            { id: "PG-10221", title: "WordPress Website",   buyer: "Ayesha Noor",  seller: "Sana Malik",  amount: 35000, status: "delivered" },
-            { id: "PG-10190", title: "SEO Audit",            buyer: "Hamza Sheikh", seller: "Usman Tariq", amount: 12000, status: "completed" },
-            { id: "PG-10177", title: "Urdu Voiceover",       buyer: "Ayesha Noor",  seller: "Sana Malik",  amount: 4000,  status: "cancelled" }
-        ];
+bindLogout();
 
-        let disputes = JSON.parse(localStorage.getItem("pakgigAdminDisputes") || "null") || [
-            {
-                id: "PG-10221",
-                title: "WordPress Website",
-                buyer: "Ayesha Noor",
-                seller: "Sana Malik",
-                amount: 35000,
-                reason: "Buyer says 2 of the 5 pages were not delivered as agreed. Seller claims the scope changed mid-project.",
-                status: "open"
-            }
-        ];
+const $ = (id) => document.getElementById(id);
 
-        let transactions = JSON.parse(localStorage.getItem("pakgigEscrow") || "null") || [
-            { id: "PG-10234", title: "Modern Logo Design for PakGig", amount: 8000,  status: "held",     date: "2026-09-15" },
-            { id: "PG-10221", title: "WordPress Business Website",     amount: 35000, status: "held",     date: "2026-09-12" },
-            { id: "PG-10190", title: "SEO Audit & On-Page Optimization", amount: 12000, status: "released", date: "2026-09-05" },
-            { id: "PG-10177", title: "Urdu Voiceover for Ad (60 sec)", amount: 4000,  status: "refunded", date: "2026-08-30" }
-        ];
+const txStatusMeta = {
+    awaiting:  { label: "Awaiting deposit",   badge: "bg-gray-100 text-gray-600 border-gray-200" },
+    held:      { label: "Held",               badge: "bg-amber-50 text-amber-700 border-amber-200" },
+    released:  { label: "Released",           badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    refunded:  { label: "Refunded",           badge: "bg-gray-100 text-gray-600 border-gray-200" },
+    requested: { label: "Withdrawal pending", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+    paid:      { label: "Withdrawn",          badge: "bg-blue-50 text-blue-700 border-blue-200" }
+};
 
-        const orderStatusMeta = {
-            pending:     { label: "Pending",     badge: "bg-gray-100 text-gray-700 border-gray-200" },
-            in_progress: { label: "In Progress", badge: "bg-blue-50 text-blue-700 border-blue-200" },
-            delivered:   { label: "Delivered",   badge: "bg-amber-50 text-amber-700 border-amber-200" },
-            completed:   { label: "Completed",   badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-            cancelled:   { label: "Cancelled",   badge: "bg-red-50 text-red-700 border-red-200" }
-        };
+let me = null;
+let users = [];
+let orders = [];
+let withdrawals = [];
+let activeDisputeId = null;
 
-        const txStatusMeta = {
-            held:      { label: "Held",      badge: "bg-amber-50 text-amber-700 border-amber-200" },
-            released:  { label: "Released",  badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-            refunded:  { label: "Refunded",  badge: "bg-gray-100 text-gray-600 border-gray-200" },
-            withdrawn: { label: "Withdrawn", badge: "bg-blue-50 text-blue-700 border-blue-200" }
-        };
+function showAlert(type, msg) {
+    const box = $("alertBox");
+    const styles = type === "success"
+        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+        : "bg-red-50 border-red-200 text-red-800";
+    box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+    box.textContent = msg;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-        function money(n) { return "Rs. " + Number(n).toLocaleString(); }
-        function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+const badge = (meta) => `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${meta.badge}">${esc(meta.label)}</span>`;
+const openDisputes = () => orders.filter((o) => o.disputed && o.disputeStatus === "open");
 
-        function showAlert(type, msg) {
-            const box = document.getElementById("alertBox");
-            const styles = type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-red-50 border-red-200 text-red-800";
-            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
-            box.innerHTML = msg;
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
+// ---------- Tab switching ----------
+function switchTab(tab) {
+    document.querySelectorAll("[id^='tab-']").forEach((el) => el.classList.add("hidden"));
+    $("tab-" + tab).classList.remove("hidden");
 
-        // ---------- Tab switching ----------
-        function switchTab(tab) {
-            document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
-            document.getElementById("tab-" + tab).classList.remove("hidden");
+    document.querySelectorAll(".navBtn").forEach((btn) => {
+        const active = btn.dataset.tab === tab;
+        btn.classList.toggle("bg-emerald-50", active);
+        btn.classList.toggle("text-emerald-700", active);
+        btn.classList.toggle("font-semibold", active);
+        btn.classList.toggle("text-gray-600", !active);
+    });
 
-            document.querySelectorAll(".navBtn").forEach(btn => {
-                const active = btn.dataset.tab === tab;
-                btn.classList.toggle("bg-emerald-50", active);
-                btn.classList.toggle("text-emerald-700", active);
-                btn.classList.toggle("font-semibold", active);
-                btn.classList.toggle("text-gray-600", !active);
-            });
+    const titles = { dashboard: "Dashboard", users: "Users", orders: "Orders", disputes: "Disputes", transactions: "Transactions" };
+    $("pageTitle").textContent = titles[tab];
+}
 
-            const titles = { dashboard: "Dashboard", users: "Users", orders: "Orders", disputes: "Disputes", transactions: "Transactions" };
-            document.getElementById("pageTitle").textContent = titles[tab];
-        }
+$("sideNav").addEventListener("click", (e) => {
+    const btn = e.target.closest(".navBtn");
+    if (btn) switchTab(btn.dataset.tab);
+});
 
-        document.getElementById("sideNav").addEventListener("click", (e) => {
-            const btn = e.target.closest(".navBtn");
-            if (btn) switchTab(btn.dataset.tab);
+// ---------- Dashboard ----------
+function renderDashboard() {
+    $("statUsers").textContent = users.length;
+    $("statActiveOrders").textContent = orders.filter((o) => o.status === "in_progress" || o.status === "delivered").length;
+    $("statEscrow").textContent = money(orders.filter((o) => o.escrow === "held").reduce((s, o) => s + Number(o.amount), 0));
+    $("statDisputes").textContent = openDisputes().length;
+    $("statRevenue").textContent = money(orders.filter((o) => o.escrow === "released").reduce((s, o) => s + feeFor(o.amount), 0));
+
+    const b = $("disputeBadge");
+    if (openDisputes().length > 0) {
+        b.textContent = openDisputes().length;
+        b.classList.remove("hidden");
+    } else {
+        b.classList.add("hidden");
+    }
+
+    const waiting = orders.filter((o) => o.status === "pending" && o.escrow === "awaiting");
+    const activity = [
+        ...waiting.map((o) => `Deposit to verify: <strong>#${esc(shortId(o.id))}</strong> — ${esc(o.title)} (${money(o.amount)})`),
+        ...openDisputes().map((o) => `Dispute opened on <strong>#${esc(shortId(o.id))}</strong> — ${esc(o.title)}`),
+        ...withdrawals.filter((w) => w.status === "requested").map((w) => `Withdrawal requested by ${esc(w.sellerName)}: ${money(w.amount)}`),
+        ...orders.slice(0, 3).map((o) => `Order <strong>#${esc(shortId(o.id))}</strong> — ${esc(o.title)} is ${esc((STATUS_META[o.status] || STATUS_META.pending).label.toLowerCase())}`)
+    ];
+    $("recentActivity").innerHTML = activity.map((a) => `<li class="border-b border-gray-50 pb-2 last:border-0">${a}</li>`).join("") || "<li>No recent activity.</li>";
+}
+
+// ---------- Users ----------
+function renderUsers(filter) {
+    const q = (filter || "").trim().toLowerCase();
+    const list = users.filter((u) => String(u.fullName || "").toLowerCase().includes(q) || String(u.email || "").toLowerCase().includes(q));
+
+    $("usersTableBody").innerHTML = list.map((u) => {
+        const suspended = u.status === "suspended";
+        const canToggle = u.role !== "admin" && u.id !== me.uid;
+        const statusBadge = suspended ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200";
+        const role = String(u.role || "buyer");
+        return `
+        <tr class="border-b border-gray-50 last:border-0">
+            <td class="p-3 font-medium text-gray-900">${esc(u.fullName || "—")}</td>
+            <td class="p-3 text-gray-500">${esc(u.email || "—")}</td>
+            <td class="p-3 text-gray-600">${esc(role.charAt(0).toUpperCase() + role.slice(1))}</td>
+            <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusBadge}">${suspended ? "Suspended" : "Active"}</span></td>
+            <td class="p-3 text-gray-500">${esc(formatDate(u.createdAt) || "—")}</td>
+            <td class="p-3 text-right">
+                ${canToggle ? `<button data-id="${esc(u.id)}" class="toggleUserBtn text-xs font-semibold ${suspended ? "text-emerald-700" : "text-red-600"} hover:underline">${suspended ? "Reactivate" : "Suspend"}</button>` : ""}
+            </td>
+        </tr>`;
+    }).join("") || `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">No users found.</td></tr>`;
+}
+
+$("usersTableBody").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".toggleUserBtn");
+    if (!btn) return;
+    const user = users.find((u) => u.id === btn.dataset.id);
+    if (!user) return;
+    const willSuspend = user.status !== "suspended";
+    const name = user.fullName || user.email || "this user";
+    if (willSuspend && !confirm(`Suspend ${name}? They will no longer be able to place orders, send messages or create gigs.`)) return;
+
+    try {
+        await setUserStatus(user.id, willSuspend ? "suspended" : "active");
+        user.status = willSuspend ? "suspended" : "active";
+        renderUsers($("userSearch").value);
+        showAlert("success", `${name} has been ${willSuspend ? "suspended" : "reactivated"}.`);
+    } catch (err) {
+        showAlert("error", "Could not update this user. Check the Firestore rules.");
+    }
+});
+
+$("userSearch").addEventListener("input", (e) => renderUsers(e.target.value));
+
+// ---------- Orders ----------
+function renderOrdersTable() {
+    $("ordersTableBody").innerHTML = orders.map((o) => {
+        const s = STATUS_META[o.status] || STATUS_META.pending;
+        const acts = availableActions(o, me.uid, true);
+        const dep = o.deposit || {};
+        const depositLine = o.escrow === "awaiting" && o.status === "pending"
+            ? `<div class="text-[11px] text-gray-400 mt-0.5">Deposit: ${esc(dep.method)} · TID ${esc(dep.tid)} · reported ${money(dep.amountReported)} · payer ${esc(dep.payerName)}</div>` : "";
+        const buttons = [];
+        if (acts.includes("verify")) buttons.push(`<button data-id="${esc(o.id)}" data-action="verify" class="orderActBtn text-xs font-semibold text-emerald-700 hover:underline">Verify deposit</button>`);
+        if (acts.includes("refund")) buttons.push(`<button data-id="${esc(o.id)}" data-action="refund" class="orderActBtn text-xs font-semibold text-red-600 hover:underline">Refund</button>`);
+        return `
+        <tr class="border-b border-gray-50 last:border-0 align-top">
+            <td class="p-3 text-gray-500">#${esc(shortId(o.id))}</td>
+            <td class="p-3 font-medium text-gray-900">${esc(o.title)}${depositLine}</td>
+            <td class="p-3 text-gray-600">${esc(o.buyerName)} → ${esc(o.sellerName)}</td>
+            <td class="p-3 font-semibold text-gray-900">${money(o.amount)}</td>
+            <td class="p-3">${badge(s)}</td>
+            <td class="p-3 text-right space-x-3">${buttons.join("")}</td>
+        </tr>`;
+    }).join("") || `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">No orders yet.</td></tr>`;
+}
+
+$("ordersTableBody").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".orderActBtn");
+    if (!btn) return;
+    const o = orders.find((x) => x.id === btn.dataset.id);
+    if (!o) return;
+    const action = btn.dataset.action;
+
+    if (action === "verify" && !confirm(`Confirm you received ${money(o.amount)} for "${o.title}"? The order will start and the money will show as held in escrow.`)) return;
+    if (action === "refund" && !confirm(`Mark ${money(o.amount)} as refunded to the buyer and cancel this order? Send the money back yourself first.`)) return;
+
+    try {
+        await orderAction(o.id, action, {});
+        showAlert("success", action === "verify" ? "Deposit verified. The order is now in progress." : "Order cancelled and marked as refunded.");
+    } catch (err) {
+        showAlert("error", "Could not update this order. Check the Firestore rules.");
+    }
+});
+
+// ---------- Disputes ----------
+function renderDisputes() {
+    const list = $("disputesList");
+    const empty = $("disputesEmpty");
+    const open = openDisputes();
+
+    if (open.length === 0) {
+        list.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+    }
+    empty.classList.add("hidden");
+
+    list.innerHTML = open.map((d) => `
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="min-w-0">
+                <p class="text-xs text-gray-400">#${esc(shortId(d.id))}</p>
+                <p class="font-semibold text-gray-900 text-sm">${esc(d.title)}</p>
+                <p class="text-xs text-gray-500 mt-1">${esc(d.buyerName)} vs ${esc(d.sellerName)} &middot; ${money(d.amount)}</p>
+            </div>
+            <button data-id="${esc(d.id)}" class="reviewDisputeBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition">
+                Review Dispute
+            </button>
+        </div>`).join("");
+}
+
+$("disputesList").addEventListener("click", (e) => {
+    const btn = e.target.closest(".reviewDisputeBtn");
+    if (btn) openDisputeModal(btn.dataset.id);
+});
+
+function openDisputeModal(id) {
+    const d = orders.find((x) => x.id === id);
+    if (!d) return;
+    activeDisputeId = id;
+
+    $("disputeModalAlert").className = "hidden";
+    $("disputeOrderId").textContent = "Order #" + shortId(d.id);
+    const openedBy = d.disputeBy === d.buyerId ? "the buyer" : "the seller";
+    $("disputeReason").textContent = `Opened by ${openedBy}: ${d.disputeReason || ""}`;
+    $("disputeBuyer").textContent = d.buyerName;
+    $("disputeSeller").textContent = d.sellerName;
+    $("disputeAmount").textContent = money(d.amount);
+
+    const modal = $("disputeModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function closeDisputeModal() {
+    $("disputeModal").classList.add("hidden");
+    $("disputeModal").classList.remove("flex");
+    activeDisputeId = null;
+}
+
+async function resolveDispute(action) {
+    const d = orders.find((x) => x.id === activeDisputeId);
+    if (!d) return;
+    try {
+        await orderAction(d.id, action, {});
+        closeDisputeModal();
+        showAlert("success", `Dispute #${shortId(d.id)} resolved — ${action === "resolve_refund" ? "marked as refunded to the buyer" : "released to the seller"}.`);
+    } catch (err) {
+        const box = $("disputeModalAlert");
+        box.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+        box.textContent = "Could not resolve this dispute. Check the Firestore rules.";
+    }
+}
+
+$("closeDisputeModal").addEventListener("click", closeDisputeModal);
+$("disputeModal").addEventListener("click", (e) => { if (e.target.id === "disputeModal") closeDisputeModal(); });
+$("refundBuyerBtn").addEventListener("click", () => {
+    if (confirm("Mark the full amount as refunded to the buyer? Send the money back yourself first.")) resolveDispute("resolve_refund");
+});
+$("releaseSellerBtn").addEventListener("click", () => {
+    if (confirm("Release the full amount to the seller?")) resolveDispute("resolve_release");
+});
+
+// ---------- Transactions (escrow ledger + withdrawal requests) ----------
+function renderTxTable() {
+    const rows = [];
+
+    orders.filter((o) => o.escrow !== "awaiting").forEach((o) => {
+        rows.push({
+            when: o.createdAt && o.createdAt.toMillis ? o.createdAt.toMillis() : 0,
+            html: `
+            <tr class="border-b border-gray-50 last:border-0">
+                <td class="p-3 text-gray-500">#${esc(shortId(o.id))}</td>
+                <td class="p-3 font-medium text-gray-900">${esc(o.title)}</td>
+                <td class="p-3 font-semibold text-gray-900">${money(o.amount)}</td>
+                <td class="p-3">${badge(txStatusMeta[o.escrow])}</td>
+                <td class="p-3 text-gray-500">${esc(formatDate(o.createdAt))}</td>
+                <td class="p-3"></td>
+            </tr>`
         });
+    });
 
-        // ---------- Dashboard ----------
-        function renderDashboard() {
-            document.getElementById("statUsers").textContent = users.length;
-            document.getElementById("statActiveOrders").textContent =
-                orders.filter(o => o.status === "in_progress" || o.status === "delivered").length;
-
-            const heldTotal = transactions.filter(t => t.status === "held").reduce((s, t) => s + t.amount, 0);
-            document.getElementById("statEscrow").textContent = money(heldTotal);
-
-            const openDisputes = disputes.filter(d => d.status === "open").length;
-            document.getElementById("statDisputes").textContent = openDisputes;
-
-            const revenue = orders.filter(o => o.status === "completed").reduce((s, o) => s + Math.round(o.amount * 0.1), 0);
-            document.getElementById("statRevenue").textContent = money(revenue);
-
-            const badge = document.getElementById("disputeBadge");
-            if (openDisputes > 0) {
-                badge.textContent = openDisputes;
-                badge.classList.remove("hidden");
-            } else {
-                badge.classList.add("hidden");
-            }
-
-            const activity = [
-                ...orders.slice(0, 3).map(o => `Order <strong>#${o.id}</strong> — ${o.title} is ${orderStatusMeta[o.status].label.toLowerCase()}`),
-                ...disputes.filter(d => d.status === "open").map(d => `Dispute opened on <strong>#${d.id}</strong> by ${d.buyer}`)
-            ];
-            document.getElementById("recentActivity").innerHTML = activity.map(a => `<li class="border-b border-gray-50 pb-2 last:border-0">${a}</li>`).join("") || "<li>No recent activity.</li>";
-        }
-
-        // ---------- Users ----------
-        function renderUsers(filter = "") {
-            const q = filter.trim().toLowerCase();
-            const tbody = document.getElementById("usersTableBody");
-            const filtered = users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-
-            tbody.innerHTML = filtered.map(u => {
-                const suspended = u.status === "suspended";
-                const statusBadge = suspended
-                    ? "bg-red-50 text-red-700 border-red-200"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-200";
-                return `
-                <tr class="border-b border-gray-50 last:border-0">
-                    <td class="p-3 font-medium text-gray-900">${u.name}</td>
-                    <td class="p-3 text-gray-500">${u.email}</td>
-                    <td class="p-3 text-gray-600">${u.role}</td>
-                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${statusBadge}">${suspended ? "Suspended" : "Active"}</span></td>
-                    <td class="p-3 text-gray-500">${u.joined}</td>
-                    <td class="p-3 text-right">
-                        <button data-id="${u.id}" class="toggleUserBtn text-xs font-semibold ${suspended ? "text-emerald-700" : "text-red-600"} hover:underline">
-                            ${suspended ? "Reactivate" : "Suspend"}
-                        </button>
-                    </td>
-                </tr>`;
-            }).join("") || `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">No users found.</td></tr>`;
-
-            tbody.querySelectorAll(".toggleUserBtn").forEach(btn => {
-                btn.addEventListener("click", () => toggleUserStatus(btn.dataset.id));
-            });
-        }
-
-        function toggleUserStatus(id) {
-            const user = users.find(u => u.id === id);
-            if (!user) return;
-            const willSuspend = user.status !== "suspended";
-
-            if (willSuspend && !confirm(`Suspend ${user.name}'s account? They won't be able to log in.`)) return;
-
-            // demo only — replace with: fetch(`/api/admin/users/${id}/status`, { method: 'PATCH', body: {...} })
-            user.status = willSuspend ? "suspended" : "active";
-            save("pakgigAdminUsers", users);
-            renderUsers(document.getElementById("userSearch").value);
-            showAlert("success", `${user.name} has been ${willSuspend ? "suspended" : "reactivated"}.`);
-        }
-
-        document.getElementById("userSearch").addEventListener("input", (e) => renderUsers(e.target.value));
-
-        // ---------- Orders ----------
-        function renderOrdersTable() {
-            const tbody = document.getElementById("ordersTableBody");
-            tbody.innerHTML = orders.map(o => {
-                const s = orderStatusMeta[o.status];
-                return `
-                <tr class="border-b border-gray-50 last:border-0">
-                    <td class="p-3 text-gray-500">#${o.id}</td>
-                    <td class="p-3 font-medium text-gray-900">${o.title}</td>
-                    <td class="p-3 text-gray-600">${o.buyer} → ${o.seller}</td>
-                    <td class="p-3 font-semibold text-gray-900">${money(o.amount)}</td>
-                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span></td>
-                    <td class="p-3 text-right"><a href="order.html" class="text-xs font-semibold text-emerald-700 hover:underline">View →</a></td>
-                </tr>`;
-            }).join("");
-        }
-
-        // ---------- Disputes ----------
-        function renderDisputes() {
-            const list = document.getElementById("disputesList");
-            const empty = document.getElementById("disputesEmpty");
-            const open = disputes.filter(d => d.status === "open");
-
-            if (open.length === 0) {
-                list.innerHTML = "";
-                empty.classList.remove("hidden");
-                return;
-            }
-            empty.classList.add("hidden");
-
-            list.innerHTML = open.map(d => `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="text-xs text-gray-400">#${d.id}</p>
-                        <p class="font-semibold text-gray-900 text-sm">${d.title}</p>
-                        <p class="text-xs text-gray-500 mt-1">${d.buyer} vs ${d.seller} &middot; ${money(d.amount)}</p>
-                    </div>
-                    <button data-id="${d.id}" class="reviewDisputeBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition">
-                        Review Dispute
-                    </button>
-                </div>
-            `).join("");
-
-            list.querySelectorAll(".reviewDisputeBtn").forEach(btn => {
-                btn.addEventListener("click", () => openDisputeModal(btn.dataset.id));
-            });
-        }
-
-        let activeDisputeId = null;
-
-        function openDisputeModal(id) {
-            const d = disputes.find(x => x.id === id);
-            if (!d) return;
-            activeDisputeId = id;
-
-            document.getElementById("disputeModalAlert").className = "hidden";
-            document.getElementById("disputeOrderId").textContent = "Order #" + d.id;
-            document.getElementById("disputeReason").textContent = d.reason;
-            document.getElementById("disputeBuyer").textContent = d.buyer;
-            document.getElementById("disputeSeller").textContent = d.seller;
-            document.getElementById("disputeAmount").textContent = money(d.amount);
-
-            const modal = document.getElementById("disputeModal");
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function closeDisputeModal() {
-            document.getElementById("disputeModal").classList.add("hidden");
-            document.getElementById("disputeModal").classList.remove("flex");
-            activeDisputeId = null;
-        }
-
-        function resolveDispute(resolution) {
-            const d = disputes.find(x => x.id === activeDisputeId);
-            if (!d) return;
-
-            // demo only — replace with: fetch(`/api/admin/disputes/${d.id}/resolve`, { method: 'POST', body: { resolution } })
-            d.status = "resolved";
-            const tx = transactions.find(t => t.id === d.id);
-            if (tx) tx.status = resolution === "refund" ? "refunded" : "released";
-
-            const order = orders.find(o => o.id === d.id);
-            if (order) order.status = resolution === "refund" ? "cancelled" : "completed";
-
-            save("pakgigAdminDisputes", disputes);
-            save("pakgigEscrow", transactions);
-            save("pakgigAdminOrders", orders);
-
-            closeDisputeModal();
-            renderDisputes();
-            renderDashboard();
-            renderOrdersTable();
-            showAlert("success", `Dispute #${d.id} resolved — funds ${resolution === "refund" ? "refunded to buyer" : "released to seller"}.`);
-        }
-
-        document.getElementById("closeDisputeModal").addEventListener("click", closeDisputeModal);
-        document.getElementById("disputeModal").addEventListener("click", (e) => {
-            if (e.target.id === "disputeModal") closeDisputeModal();
+    withdrawals.forEach((w) => {
+        const t = sellerTotals(orders, withdrawals, w.sellerId);
+        const over = t.withdrawn > t.earned;
+        const check = over
+            ? `<span class="text-red-600 font-semibold">Requests total ${money(t.withdrawn)} but earnings are only ${money(t.earned)} — do not pay.</span>`
+            : `Earned ${money(t.earned)}, requested/paid ${money(t.withdrawn)}.`;
+        rows.push({
+            when: w.createdAt && w.createdAt.toMillis ? w.createdAt.toMillis() : 0,
+            html: `
+            <tr class="border-b border-gray-50 last:border-0 align-top">
+                <td class="p-3 text-gray-500">WD-${esc(shortId(w.id))}</td>
+                <td class="p-3 font-medium text-gray-900">${esc(w.sellerName)} → ${esc(w.bank)}
+                    <div class="text-[11px] text-gray-500 font-normal mt-0.5">Account: ${esc(w.account)}</div>
+                    <div class="text-[11px] text-gray-400 font-normal">${check}</div></td>
+                <td class="p-3 font-semibold text-gray-900">${money(w.amount)}</td>
+                <td class="p-3">${badge(txStatusMeta[w.status === "paid" ? "paid" : "requested"])}</td>
+                <td class="p-3 text-gray-500">${esc(formatDate(w.createdAt))}</td>
+                <td class="p-3 text-right">${w.status === "requested" && !over ? `<button data-id="${esc(w.id)}" class="markPaidBtn text-xs font-semibold text-emerald-700 hover:underline">Mark paid</button>` : ""}</td>
+            </tr>`
         });
-        document.getElementById("refundBuyerBtn").addEventListener("click", () => {
-            if (confirm("Refund the full amount to the buyer?")) resolveDispute("refund");
-        });
-        document.getElementById("releaseSellerBtn").addEventListener("click", () => {
-            if (confirm("Release the full amount to the seller?")) resolveDispute("release");
-        });
+    });
 
-        // ---------- Transactions ----------
-        function renderTxTable() {
-            const tbody = document.getElementById("txTableBody");
-            tbody.innerHTML = transactions.map(t => {
-                const s = txStatusMeta[t.status];
-                return `
-                <tr class="border-b border-gray-50 last:border-0">
-                    <td class="p-3 text-gray-500">#${t.id}</td>
-                    <td class="p-3 font-medium text-gray-900">${t.title}</td>
-                    <td class="p-3 font-semibold text-gray-900">${money(t.amount)}</td>
-                    <td class="p-3"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span></td>
-                    <td class="p-3 text-gray-500">${t.date}</td>
-                </tr>`;
-            }).join("");
-        }
+    $("txTableBody").innerHTML = rows.sort((a, b) => b.when - a.when).map((r) => r.html).join("")
+        || `<tr><td colspan="6" class="p-6 text-center text-gray-400 text-xs">No transactions yet.</td></tr>`;
+}
 
-        // ---------- Init ----------
-        renderDashboard();
-        renderUsers();
-        renderOrdersTable();
-        renderDisputes();
-        renderTxTable();
+$("txTableBody").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".markPaidBtn");
+    if (!btn) return;
+    const w = withdrawals.find((x) => x.id === btn.dataset.id);
+    if (!w) return;
+    if (!confirm(`Confirm you have sent ${money(w.amount)} to ${w.sellerName} (${w.bank}, ${w.account})?`)) return;
+    try {
+        await markWithdrawalPaid(w.id);
+        showAlert("success", "Withdrawal marked as paid.");
+    } catch (err) {
+        showAlert("error", "Could not update this withdrawal. Check the Firestore rules.");
+    }
+});
+
+// ---------- Init ----------
+function renderAll() {
+    renderDashboard();
+    renderUsers($("userSearch").value);
+    renderOrdersTable();
+    renderDisputes();
+    renderTxTable();
+}
+
+requireLogin({ adminOnly: true }).then(async (res) => {
+    me = res.user;
+    const onError = () => showAlert("error", "Could not load data. Check your connection and that the Firestore rules are published.");
+
+    try { users = await listUsers(); } catch (e) { onError(); }
+    watchAllOrders((data) => { orders = data; renderAll(); }, onError);
+    watchAllWithdrawals((data) => { withdrawals = data; renderAll(); }, onError);
+    renderAll();
+});
     </script>
 </body>
 </html>
