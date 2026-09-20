@@ -22,7 +22,7 @@
                 <a href="escrow.html" class="text-emerald-700">Escrow</a>
                 <a href="messages.html" class="hover:text-emerald-700">Messages</a>
                 <a href="profile.html" class="hover:text-emerald-700">Profile</a>
-                <a href="login.html" class="hover:text-red-600">Logout</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
             </div>
         </div>
     </nav>
@@ -59,7 +59,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <p class="text-sm font-semibold text-gray-900">Withdraw your available balance</p>
-                <p class="text-xs text-gray-500 mt-0.5">Transfers to your linked bank account within 2-3 business days</p>
+                <p class="text-xs text-gray-500 mt-0.5">PakGig sends withdrawals manually after checking your balance</p>
             </div>
             <button id="withdrawBtn" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition shrink-0">
                 Withdraw Funds
@@ -118,12 +118,16 @@
                     <input type="number" id="withdrawAmount" min="1" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. 5000">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Bank Account</label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Send money to</label>
                     <select id="bankSelect" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        <option>Meezan Bank •••• 4821</option>
-                        <option>JazzCash •••• 0091</option>
-                        <option>+ Add new account</option>
+                        <option>JazzCash</option>
+                        <option>EasyPaisa</option>
+                        <option>Bank Transfer</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Account / wallet number</label>
+                    <input type="text" id="withdrawAccount" maxlength="60" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. 03001234567 or IBAN">
                 </div>
                 <button type="button" id="confirmWithdraw" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed">
                     Confirm Withdrawal
@@ -132,180 +136,206 @@
         </div>
     </div>
 
-    <script>
-        // Demo data — replace with a real GET /api/escrow call to your backend.
-        let transactions = JSON.parse(localStorage.getItem("pakgigEscrow") || "null") || [
-            { id: "PG-10234", title: "Modern Logo Design for PakGig", amount: 8000,  status: "held",      date: "2026-09-15" },
-            { id: "PG-10221", title: "WordPress Business Website",     amount: 35000, status: "held",      date: "2026-09-12" },
-            { id: "PG-10190", title: "SEO Audit & On-Page Optimization", amount: 12000, status: "released",  date: "2026-09-05" },
-            { id: "PG-10177", title: "Urdu Voiceover for Ad (60 sec)", amount: 4000,  status: "refunded",  date: "2026-08-30" },
-            { id: "PG-10102", title: "Product Photography (10 shots)", amount: 15000, status: "withdrawn", date: "2026-08-20" }
-        ];
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { watchMyOrders, watchMyWithdrawals, requestWithdrawal, getMyProfile, formatDate } from "./js/data.js";
+import { esc, money, shortId, payoutFor, sellerTotals, buyerHeld } from "./js/ledger.js";
 
-        const statusMeta = {
-            held:      { label: "Held",      badge: "bg-amber-50 text-amber-700 border-amber-200",     amountColor: "text-amber-700" },
-            released:  { label: "Released",  badge: "bg-emerald-50 text-emerald-700 border-emerald-200", amountColor: "text-emerald-700" },
-            refunded:  { label: "Refunded",  badge: "bg-gray-100 text-gray-600 border-gray-200",        amountColor: "text-gray-500" },
-            withdrawn: { label: "Withdrawn", badge: "bg-blue-50 text-blue-700 border-blue-200",         amountColor: "text-blue-700" }
+bindLogout();
+
+const $ = (id) => document.getElementById(id);
+
+const statusMeta = {
+    awaiting:  { label: "Awaiting deposit", badge: "bg-gray-100 text-gray-600 border-gray-200",       amountColor: "text-gray-500" },
+    held:      { label: "Held",             badge: "bg-amber-50 text-amber-700 border-amber-200",     amountColor: "text-amber-700" },
+    released:  { label: "Released",         badge: "bg-emerald-50 text-emerald-700 border-emerald-200", amountColor: "text-emerald-700" },
+    refunded:  { label: "Refunded",         badge: "bg-gray-100 text-gray-600 border-gray-200",       amountColor: "text-gray-500" },
+    requested: { label: "Withdrawal pending", badge: "bg-blue-50 text-blue-700 border-blue-200",      amountColor: "text-blue-700" },
+    withdrawn: { label: "Withdrawn",        badge: "bg-blue-50 text-blue-700 border-blue-200",        amountColor: "text-blue-700" }
+};
+
+let me = null;
+let profile = { role: "buyer" };
+let orders = [];
+let withdrawals = [];
+let currentFilter = "all";
+
+function showAlert(type, msg) {
+    const box = $("alertBox");
+    const styles = type === "success"
+        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+        : "bg-red-50 border-red-200 text-red-800";
+    box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+    box.textContent = msg;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function isSeller() { return profile.role === "seller" || profile.role === "admin"; }
+
+function rows() {
+    const list = orders.filter((o) => !(o.status === "cancelled" && o.escrow === "awaiting")).map((o) => {
+        const asSeller = o.sellerId === me.uid;
+        return {
+            key: o.id, kind: "order", status: o.escrow,
+            title: o.title,
+            ref: "#" + shortId(o.id),
+            amount: asSeller ? payoutFor(o.amount) : o.amount,
+            note: asSeller ? " (after 5% fee)" : "",
+            date: formatDate(o.createdAt),
+            when: o.createdAt && o.createdAt.toMillis ? o.createdAt.toMillis() : 0,
+            href: "order.html?order=" + encodeURIComponent(o.id)
         };
-
-        let currentFilter = "all";
-
-        function money(n) {
-            return "Rs. " + Number(n).toLocaleString();
-        }
-
-        function saveTx() {
-            localStorage.setItem("pakgigEscrow", JSON.stringify(transactions));
-        }
-
-        function computeTotals() {
-            const held = transactions.filter(t => t.status === "held").reduce((s, t) => s + t.amount, 0);
-            const released = transactions.filter(t => t.status === "released").reduce((s, t) => s + t.amount, 0);
-            const withdrawn = transactions.filter(t => t.status === "withdrawn").reduce((s, t) => s + t.amount, 0);
-            const releasedAllTime = released + withdrawn;
-
-            document.getElementById("heldTotal").textContent = money(held);
-            document.getElementById("availableTotal").textContent = money(released);
-            document.getElementById("releasedTotal").textContent = money(releasedAllTime);
-            document.getElementById("modalAvailable").textContent = money(released);
-        }
-
-        function renderTransactions() {
-            const list = document.getElementById("txList");
-            const empty = document.getElementById("emptyState");
-
-            const filtered = transactions.filter(t => currentFilter === "all" ? true : t.status === currentFilter);
-
-            if (filtered.length === 0) {
-                list.innerHTML = "";
-                list.classList.add("hidden");
-                empty.classList.remove("hidden");
-                return;
-            }
-            list.classList.remove("hidden");
-            empty.classList.add("hidden");
-
-            list.innerHTML = filtered.map(t => {
-                const s = statusMeta[t.status];
-                return `
-                <div class="p-4 flex items-center justify-between gap-4">
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-900 truncate">${t.title}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">#${t.id} &middot; ${t.date}</p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <p class="font-bold text-sm ${s.amountColor}">${money(t.amount)}</p>
-                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span>
-                    </div>
-                    <a href="order.html" class="text-xs font-semibold text-emerald-700 hover:underline shrink-0">View →</a>
-                </div>`;
-            }).join("");
-        }
-
-        function showAlert(type, msg) {
-            const box = document.getElementById("alertBox");
-            const styles = type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-red-50 border-red-200 text-red-800";
-            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
-            box.innerHTML = msg;
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        // Filter tabs
-        document.getElementById("filterTabs").addEventListener("click", (e) => {
-            const btn = e.target.closest(".filter-btn");
-            if (!btn) return;
-            currentFilter = btn.dataset.filter;
-
-            document.querySelectorAll(".filter-btn").forEach(b => {
-                b.classList.remove("bg-emerald-700", "text-white");
-                b.classList.add("text-gray-600");
-            });
-            btn.classList.add("bg-emerald-700", "text-white");
-            btn.classList.remove("text-gray-600");
-
-            renderTransactions();
+    });
+    withdrawals.forEach((w) => {
+        list.push({
+            key: w.id, kind: "withdrawal",
+            status: w.status === "paid" ? "withdrawn" : "requested",
+            title: "Withdrawal to " + w.bank,
+            ref: "WD-" + shortId(w.id),
+            amount: w.amount, note: "",
+            date: formatDate(w.createdAt),
+            when: w.createdAt && w.createdAt.toMillis ? w.createdAt.toMillis() : 0,
+            href: null
         });
+    });
+    return list.sort((a, b) => b.when - a.when);
+}
 
-        // Withdraw modal
-        const withdrawModal = document.getElementById("withdrawModal");
-        const withdrawAlert = document.getElementById("withdrawAlert");
-        const withdrawAmount = document.getElementById("withdrawAmount");
-        const confirmWithdraw = document.getElementById("confirmWithdraw");
+function computeTotals() {
+    if (isSeller()) {
+        const t = sellerTotals(orders, withdrawals, me.uid);
+        $("heldTotal").textContent = money(t.held);
+        $("availableTotal").textContent = money(t.available);
+        $("releasedTotal").textContent = money(t.earned);
+        $("modalAvailable").textContent = money(t.available);
+    } else {
+        $("heldTotal").textContent = money(buyerHeld(orders, me.uid));
+        $("availableTotal").textContent = money(0);
+        $("releasedTotal").textContent = money(0);
+    }
+}
 
-        function openWithdraw() {
-            withdrawAlert.className = "hidden";
-            withdrawAmount.value = "";
-            confirmWithdraw.disabled = false;
-            confirmWithdraw.innerHTML = "Confirm Withdrawal";
-            withdrawModal.classList.remove("hidden");
-            withdrawModal.classList.add("flex");
-        }
+function renderTransactions() {
+    const list = $("txList");
+    const empty = $("emptyState");
+    const filtered = rows().filter((r) =>
+        currentFilter === "all" ? true
+        : currentFilter === "withdrawn" ? (r.status === "withdrawn" || r.status === "requested")
+        : r.status === currentFilter);
 
-        function closeWithdraw() {
-            withdrawModal.classList.add("hidden");
-            withdrawModal.classList.remove("flex");
-        }
+    if (filtered.length === 0) {
+        list.innerHTML = "";
+        list.classList.add("hidden");
+        empty.classList.remove("hidden");
+        return;
+    }
+    list.classList.remove("hidden");
+    empty.classList.add("hidden");
 
-        document.getElementById("withdrawBtn").addEventListener("click", openWithdraw);
-        document.getElementById("closeWithdraw").addEventListener("click", closeWithdraw);
-        withdrawModal.addEventListener("click", (e) => { if (e.target === withdrawModal) closeWithdraw(); });
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && !withdrawModal.classList.contains("hidden")) closeWithdraw();
+    list.innerHTML = filtered.map((r) => {
+        const s = statusMeta[r.status] || statusMeta.awaiting;
+        return `
+        <div class="p-4 flex items-center justify-between gap-4">
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-gray-900 truncate">${esc(r.title)}</p>
+                <p class="text-xs text-gray-500 mt-0.5">${esc(r.ref)} &middot; ${esc(r.date)}</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="font-bold text-sm ${s.amountColor}">${money(r.amount)}<span class="text-[10px] font-normal text-gray-400">${esc(r.note)}</span></p>
+                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${esc(s.label)}</span>
+            </div>
+            ${r.href ? `<a href="${esc(r.href)}" class="text-xs font-semibold text-emerald-700 hover:underline shrink-0">View →</a>` : `<span class="w-9 shrink-0"></span>`}
+        </div>`;
+    }).join("");
+}
+
+function refresh() {
+    computeTotals();
+    renderTransactions();
+}
+
+$("filterTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll(".filter-btn").forEach((b) => {
+        b.classList.remove("bg-emerald-700", "text-white");
+        b.classList.add("text-gray-600");
+    });
+    btn.classList.add("bg-emerald-700", "text-white");
+    btn.classList.remove("text-gray-600");
+    renderTransactions();
+});
+
+// ---------------- withdraw request
+const withdrawModal = $("withdrawModal");
+const withdrawAlert = $("withdrawAlert");
+const confirmWithdraw = $("confirmWithdraw");
+
+function setWithdrawAlert(msg) {
+    withdrawAlert.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+    withdrawAlert.textContent = msg;
+}
+
+function openWithdraw() {
+    withdrawAlert.className = "hidden";
+    $("withdrawAmount").value = "";
+    $("withdrawAccount").value = "";
+    confirmWithdraw.disabled = false;
+    confirmWithdraw.textContent = "Request Withdrawal";
+    withdrawModal.classList.remove("hidden");
+    withdrawModal.classList.add("flex");
+}
+
+function closeWithdraw() {
+    withdrawModal.classList.add("hidden");
+    withdrawModal.classList.remove("flex");
+}
+
+$("withdrawBtn").addEventListener("click", openWithdraw);
+$("closeWithdraw").addEventListener("click", closeWithdraw);
+withdrawModal.addEventListener("click", (e) => { if (e.target === withdrawModal) closeWithdraw(); });
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !withdrawModal.classList.contains("hidden")) closeWithdraw();
+});
+
+confirmWithdraw.addEventListener("click", async () => {
+    const available = sellerTotals(orders, withdrawals, me.uid).available;
+    const amount = Number($("withdrawAmount").value);
+    const account = $("withdrawAccount").value.trim();
+
+    if (!amount || amount <= 0) return setWithdrawAlert("Please enter a valid amount.");
+    if (amount > available) return setWithdrawAlert("Amount exceeds your available balance.");
+    if (account.length < 5) return setWithdrawAlert("Enter the account or wallet number to send the money to.");
+
+    confirmWithdraw.disabled = true;
+    confirmWithdraw.textContent = "Sending request...";
+    try {
+        await requestWithdrawal(me, me.displayName || (me.email || "").split("@")[0], {
+            amount: amount, bank: $("bankSelect").value, account: account
         });
+        closeWithdraw();
+        showAlert("success", "Withdrawal of " + money(amount) + " requested. PakGig pays it out manually after checking your balance.");
+    } catch (err) {
+        confirmWithdraw.disabled = false;
+        confirmWithdraw.textContent = "Request Withdrawal";
+        setWithdrawAlert("Could not send the request. Please try again.");
+    }
+});
 
-        confirmWithdraw.addEventListener("click", () => {
-            const available = transactions.filter(t => t.status === "released").reduce((s, t) => s + t.amount, 0);
-            const amount = Number(withdrawAmount.value);
+requireLogin().then(async (res) => {
+    me = res.user;
+    try { profile = await getMyProfile(me); } catch (e) {}
 
-            if (!amount || amount <= 0) {
-                withdrawAlert.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
-                withdrawAlert.innerHTML = "Please enter a valid amount.";
-                return;
-            }
-            if (amount > available) {
-                withdrawAlert.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
-                withdrawAlert.innerHTML = "Amount exceeds your available balance.";
-                return;
-            }
+    if (!isSeller()) {
+        // Buyers have nothing to withdraw
+        $("withdrawBtn").closest("div.bg-white").classList.add("hidden");
+    }
 
-            confirmWithdraw.disabled = true;
-            confirmWithdraw.innerHTML = "Processing...";
-
-            // demo only — replace with: fetch('/api/escrow/withdraw', { method: 'POST', body: {...} })
-            setTimeout(() => {
-                transactions.push({
-                    id: "WD-" + Date.now().toString().slice(-6),
-                    title: "Withdrawal to " + document.getElementById("bankSelect").value,
-                    amount: amount,
-                    status: "withdrawn",
-                    date: new Date().toISOString().slice(0, 10)
-                });
-                // reduce released balance by marking oldest released tx as withdrawn proportionally
-                // (kept simple for demo — a real backend would track ledger entries precisely)
-                let remaining = amount;
-                transactions = transactions.map(t => {
-                    if (t.status === "released" && remaining > 0) {
-                        if (t.amount <= remaining) {
-                            remaining -= t.amount;
-                            return { ...t, status: "withdrawn" };
-                        }
-                    }
-                    return t;
-                });
-
-                saveTx();
-                computeTotals();
-                renderTransactions();
-                closeWithdraw();
-                showAlert("success", "Withdrawal of " + money(amount) + " initiated. Funds arrive in 2-3 business days.");
-            }, 1000);
-        });
-
-        computeTotals();
-        renderTransactions();
+    const onError = () => showAlert("error", "Could not load your payments. Check your connection and that the Firestore rules are published.");
+    watchMyOrders(me.uid, (data) => { orders = data; refresh(); }, onError);
+    if (isSeller()) watchMyWithdrawals(me.uid, (data) => { withdrawals = data; refresh(); }, onError);
+});
     </script>
 </body>
 </html>
