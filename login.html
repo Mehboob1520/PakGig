@@ -24,7 +24,7 @@
         <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
 
         <!-- Form -->
-        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <form id="loginForm" class="space-y-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
                 <input type="email" id="loginEmail" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="name@example.com">
@@ -33,13 +33,13 @@
             <div>
                 <div class="flex justify-between items-center mb-1">
                     <label class="text-xs font-semibold text-gray-700">Password</label>
-                    <a href="#" class="text-xs text-emerald-700 hover:underline">Forgot password?</a>
+                    <button type="button" id="forgotBtn" class="text-xs text-emerald-700 hover:underline">Forgot password?</button>
                 </div>
                 <input type="password" id="loginPassword" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="••••••••">
             </div>
 
             <div class="flex items-center gap-2">
-                <input type="checkbox" id="remember" class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500">
+                <input type="checkbox" id="remember" checked class="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500">
                 <label for="remember" class="text-xs text-gray-600">Remember me on this device</label>
             </div>
 
@@ -57,25 +57,66 @@
         </div>
     </div>
 
-    <script>
-        function handleLogin(e) {
+    <script type="module">
+        import {
+            signInWithEmailAndPassword, sendPasswordResetEmail,
+            setPersistence, browserLocalPersistence, browserSessionPersistence
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { auth, isConfigured } from "./js/firebase.js";
+        import { friendlyAuthError } from "./js/session.js";
+
+        const alertBox = document.getElementById("alertBox");
+        const loginBtn = document.getElementById("loginBtn");
+        const emailInput = document.getElementById("loginEmail");
+        const passwordInput = document.getElementById("loginPassword");
+
+        function showAlert(type, message) {
+            const styles = type === "success"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800";
+            alertBox.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+            alertBox.textContent = message;
+        }
+
+        if (!isConfigured) {
+            showAlert("error", "Firebase is not set up yet. Paste your Firebase config into js/firebase.js.");
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const alertBox = document.getElementById('alertBox');
-            const loginBtn = document.getElementById('loginBtn');
+            if (!isConfigured) return;
 
             loginBtn.disabled = true;
-            loginBtn.innerHTML = "Authenticating...";
+            loginBtn.textContent = "Authenticating...";
+            alertBox.className = "hidden";
 
-            setTimeout(() => {
-                alertBox.className = "p-3 rounded-lg text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800 block";
-                alertBox.innerHTML = "Logged in successfully! Redirecting...";
+            try {
+                const remember = document.getElementById("remember").checked;
+                await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+                await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+                showAlert("success", "Logged in successfully! Redirecting...");
+                setTimeout(() => { window.location.href = "Services.html"; }, 600);
+            } catch (err) {
+                showAlert("error", friendlyAuthError(err.code));
+                loginBtn.disabled = false;
+                loginBtn.textContent = "Sign In";
+            }
+        });
 
-                setTimeout(() => {
-                    localStorage.setItem("userLoggedIn", "true");
-                    window.location.href = "Services.html";
-                }, 1200);
-            }, 1000);
-        }
+        document.getElementById("forgotBtn").addEventListener("click", async () => {
+            if (!isConfigured) return;
+            const email = emailInput.value.trim();
+            if (!email) {
+                showAlert("error", "Enter your email above first, then press Forgot password.");
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showAlert("success", "If an account exists for this email, a reset link has been sent.");
+            } catch (err) {
+                showAlert("error", friendlyAuthError(err.code));
+            }
+        });
     </script>
 </body>
 </html>
