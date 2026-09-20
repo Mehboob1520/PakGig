@@ -20,7 +20,7 @@
                 <a href="Services.html" class="hover:text-emerald-700">Services</a>
                 <a href="order.html" class="text-emerald-700">Orders</a>
                 <a href="profile.html" class="hover:text-emerald-700">Profile</a>
-                <a href="login.html" class="hover:text-red-600">Logout</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
             </div>
         </div>
     </nav>
@@ -98,266 +98,233 @@
         </div>
     </div>
 
-    <script>
-        // Demo data — replace with a real GET /api/orders call to your backend.
-        let orders = JSON.parse(localStorage.getItem("pakgigOrders") || "null") || [
-            {
-                id: "PG-10234",
-                title: "Modern Logo Design for PakGig",
-                party: "Seller: Bilal Ahmed",
-                amount: 8000,
-                status: "in_progress", // pending, in_progress, delivered, completed, cancelled
-                escrow: "held",        // held, released, refunded
-                due: "2026-09-25"
-            },
-            {
-                id: "PG-10221",
-                title: "WordPress Business Website (5 pages)",
-                party: "Seller: Sana Malik",
-                amount: 35000,
-                status: "delivered",
-                escrow: "held",
-                due: "2026-09-20"
-            },
-            {
-                id: "PG-10190",
-                title: "SEO Audit & On-Page Optimization",
-                party: "Seller: Usman Tariq",
-                amount: 12000,
-                status: "completed",
-                escrow: "released",
-                due: "2026-09-05"
-            },
-            {
-                id: "PG-10177",
-                title: "Urdu Voiceover for Ad (60 sec)",
-                party: "Seller: Ayesha Noor",
-                amount: 4000,
-                status: "cancelled",
-                escrow: "refunded",
-                due: "2026-08-30"
-            }
-        ];
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { watchMyOrders, orderAction } from "./js/data.js";
+import { esc, money, shortId, STATUS_META, ESCROW_META, roleIn, availableActions } from "./js/ledger.js";
 
-        const statusMeta = {
-            pending:     { label: "Pending",     badge: "bg-gray-100 text-gray-700 border-gray-200" },
-            in_progress: { label: "In Progress", badge: "bg-blue-50 text-blue-700 border-blue-200" },
-            delivered:   { label: "Delivered",   badge: "bg-amber-50 text-amber-700 border-amber-200" },
-            completed:   { label: "Completed",   badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-            cancelled:   { label: "Cancelled",   badge: "bg-red-50 text-red-700 border-red-200" }
-        };
+bindLogout();
 
-        const escrowMeta = {
-            held:     { label: "Held in Escrow", color: "text-amber-700" },
-            released: { label: "Released",       color: "text-emerald-700" },
-            refunded: { label: "Refunded",        color: "text-gray-600" }
-        };
+const $ = (id) => document.getElementById(id);
+const steps = ["pending", "in_progress", "delivered", "completed"];
+const stepLabels = { pending: "Placed", in_progress: "In Progress", delivered: "Delivered", completed: "Completed" };
 
-        const steps = ["pending", "in_progress", "delivered", "completed"];
+const actionUi = {
+    release:  { label: "Release Payment",   cls: "bg-emerald-700 hover:bg-emerald-800 text-white",
+                confirm: "Release escrow payment to the seller? This confirms you're satisfied with the delivery.",
+                done: "Payment released. Order marked as completed." },
+    revision: { label: "Request Revision",  cls: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+                done: "Revision requested. The seller can see the order is back in progress." },
+    cancel:   { label: "Cancel Order",      cls: "border border-red-200 text-red-600 hover:bg-red-50",
+                confirm: "Cancel this order? Use this only if you have NOT sent the deposit yet.",
+                done: "Order cancelled." },
+    deliver:  { label: "Mark as Delivered", cls: "bg-emerald-700 hover:bg-emerald-800 text-white",
+                confirm: "Mark this order as delivered? The buyer will be asked to review it.",
+                done: "Marked as delivered. Waiting for the buyer to review." },
+    dispute:  { label: "Open Dispute",      cls: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+                done: "Dispute opened. Our support team will review this order." }
+};
 
-        let currentFilter = "all";
-        let activeOrderId = null;
+let me = null;
+let orders = [];
+let currentFilter = "all";
+let activeOrderId = null;
+let deepLinkHandled = false;
 
-        function saveOrders() {
-            localStorage.setItem("pakgigOrders", JSON.stringify(orders));
+function showAlert(msg) {
+    const box = $("alertBox");
+    box.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+    box.textContent = msg;
+}
+
+function partyLabel(o) {
+    return roleIn(o, me.uid) === "seller" ? "Buyer: " + o.buyerName : "Seller: " + o.sellerName;
+}
+
+function matchesFilter(o) {
+    if (currentFilter === "all") return true;
+    if (currentFilter === "active") return o.status === "pending" || o.status === "in_progress";
+    return o.status === currentFilter;
+}
+
+function renderOrders() {
+    const list = $("ordersList");
+    const empty = $("emptyState");
+    const filtered = orders.filter(matchesFilter);
+
+    if (filtered.length === 0) {
+        list.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+    }
+    empty.classList.add("hidden");
+
+    list.innerHTML = filtered.map((o) => {
+        const s = STATUS_META[o.status] || STATUS_META.pending;
+        const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
+        return `
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:shadow-md transition">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-gray-400">#${esc(shortId(o.id))}</span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${esc(s.label)}</span>
+                    ${o.disputed && o.disputeStatus === "open" ? '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200">Dispute</span>' : ""}
+                </div>
+                <h3 class="font-semibold text-gray-900 text-sm mt-1 truncate">${esc(o.title)}</h3>
+                <p class="text-xs text-gray-500 mt-0.5">${esc(partyLabel(o))} &middot; Due ${esc(o.due)}</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="font-bold text-gray-900 text-sm">${money(o.amount)}</p>
+                <p class="text-[11px] ${e.color} font-medium">${esc(e.label)}</p>
+            </div>
+            <button data-id="${esc(o.id)}" class="viewOrderBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg border border-emerald-700 text-emerald-700 hover:bg-emerald-50 transition">
+                View Details
+            </button>
+        </div>`;
+    }).join("");
+}
+
+function renderTimeline(status) {
+    const cancelled = status === "cancelled";
+    const idx = cancelled ? -1 : steps.indexOf(status);
+    return steps.map((step, i) => {
+        const done = !cancelled && i <= idx;
+        const dotColor = done ? "bg-emerald-600" : "bg-gray-200";
+        const textColor = done ? "text-emerald-700 font-semibold" : "text-gray-400";
+        const line = i < steps.length - 1
+            ? `<div class="flex-1 h-0.5 ${i < idx ? "bg-emerald-600" : "bg-gray-200"} mx-1"></div>`
+            : "";
+        return `
+            <div class="flex items-center flex-1">
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-2.5 h-2.5 rounded-full ${dotColor}"></div>
+                    <span class="${textColor}">${stepLabels[step]}</span>
+                </div>
+                ${line}
+            </div>`;
+    }).join("") + (cancelled ? `<span class="text-red-600 font-semibold ml-2">Cancelled</span>` : "");
+}
+
+function renderActions(o) {
+    const buttons = availableActions(o, me.uid, false).map((a) =>
+        `<button data-action="${a}" class="actionBtn px-4 py-2 text-xs font-semibold rounded-lg transition ${actionUi[a].cls}">${actionUi[a].label}</button>`
+    );
+    if (o.disputed && o.disputeStatus === "open") {
+        buttons.push(`<span class="px-3 py-2 text-xs font-semibold text-red-700">Dispute open — support is reviewing this order.</span>`);
+    }
+    const other = roleIn(o, me.uid) === "seller" ? "Buyer" : "Seller";
+    buttons.push(`<a href="messages.html?order=${encodeURIComponent(o.id)}" class="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Message ${other}</a>`);
+    return buttons.join("");
+}
+
+function fillModal(o) {
+    const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
+    $("modalOrderId").textContent = "Order #" + shortId(o.id);
+    $("modalTitle").textContent = o.title;
+    $("modalParty").textContent = partyLabel(o);
+    $("modalAmount").textContent = money(o.amount);
+    $("modalDue").textContent = o.due;
+    $("modalEscrow").textContent = e.label;
+    $("modalEscrow").className = "font-semibold " + e.color;
+    $("modalTimeline").innerHTML = renderTimeline(o.status);
+    $("modalActions").innerHTML = renderActions(o);
+}
+
+function showModalAlert(type, msg) {
+    const box = $("modalAlert");
+    const styles = type === "success"
+        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+        : "bg-red-50 border-red-200 text-red-800";
+    box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+    box.textContent = msg;
+}
+
+function openOrderModal(id) {
+    const o = orders.find((x) => x.id === id);
+    if (!o) return;
+    activeOrderId = id;
+    $("modalAlert").className = "hidden";
+    fillModal(o);
+    const modal = $("orderModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function closeOrderModal() {
+    const modal = $("orderModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    activeOrderId = null;
+}
+
+async function runAction(action) {
+    const o = orders.find((x) => x.id === activeOrderId);
+    if (!o || !actionUi[action]) return;
+    if (actionUi[action].confirm && !confirm(actionUi[action].confirm)) return;
+
+    let extra = {};
+    if (action === "dispute") {
+        const reason = prompt("Describe the problem (at least 5 characters):");
+        if (reason === null) return;
+        if (reason.trim().length < 5) {
+            showModalAlert("error", "Please describe the problem in at least 5 characters.");
+            return;
         }
+        extra = { reason: reason.trim().slice(0, 500), by: me.uid };
+    }
 
-        function money(n) {
-            return "Rs. " + Number(n).toLocaleString();
-        }
+    try {
+        await orderAction(o.id, action, extra);
+        showModalAlert("success", actionUi[action].done);
+    } catch (err) {
+        showModalAlert("error", "Could not update the order. Please try again.");
+    }
+}
 
-        function renderOrders() {
-            const list = document.getElementById("ordersList");
-            const empty = document.getElementById("emptyState");
+$("ordersList").addEventListener("click", (e) => {
+    const btn = e.target.closest(".viewOrderBtn");
+    if (btn) openOrderModal(btn.dataset.id);
+});
 
-            const filtered = orders.filter(o => currentFilter === "all" ? true : o.status === currentFilter);
+$("modalActions").addEventListener("click", (e) => {
+    const btn = e.target.closest(".actionBtn");
+    if (btn) runAction(btn.dataset.action);
+});
 
-            if (filtered.length === 0) {
-                list.innerHTML = "";
-                empty.classList.remove("hidden");
-                return;
-            }
-            empty.classList.add("hidden");
+$("filterTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll(".filter-btn").forEach((b) => {
+        b.classList.remove("bg-emerald-700", "text-white");
+        b.classList.add("text-gray-600");
+    });
+    btn.classList.add("bg-emerald-700", "text-white");
+    btn.classList.remove("text-gray-600");
+    renderOrders();
+});
 
-            list.innerHTML = filtered.map(o => {
-                const s = statusMeta[o.status];
-                const e = escrowMeta[o.escrow];
-                return `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:shadow-md transition">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs text-gray-400">#${o.id}</span>
-                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${s.label}</span>
-                        </div>
-                        <h3 class="font-semibold text-gray-900 text-sm mt-1 truncate">${o.title}</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">${o.party} &middot; Due ${o.due}</p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <p class="font-bold text-gray-900 text-sm">${money(o.amount)}</p>
-                        <p class="text-[11px] ${e.color} font-medium">${e.label}</p>
-                    </div>
-                    <button data-id="${o.id}" class="viewOrderBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg border border-emerald-700 text-emerald-700 hover:bg-emerald-50 transition">
-                        View Details
-                    </button>
-                </div>`;
-            }).join("");
+$("closeModal").addEventListener("click", closeOrderModal);
+$("orderModal").addEventListener("click", (e) => { if (e.target.id === "orderModal") closeOrderModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && activeOrderId) closeOrderModal(); });
 
-            document.querySelectorAll(".viewOrderBtn").forEach(btn => {
-                btn.addEventListener("click", () => openOrderModal(btn.dataset.id));
-            });
-        }
-
-        function renderTimeline(status) {
-            const idx = status === "cancelled" ? -1 : steps.indexOf(status);
-            const labels = { pending: "Placed", in_progress: "In Progress", delivered: "Delivered", completed: "Completed" };
-
-            return steps.map((step, i) => {
-                const done = status === "cancelled" ? false : i <= idx;
-                const dotColor = done ? "bg-emerald-600" : "bg-gray-200";
-                const textColor = done ? "text-emerald-700 font-semibold" : "text-gray-400";
-                const line = i < steps.length - 1
-                    ? `<div class="flex-1 h-0.5 ${i < idx ? 'bg-emerald-600' : 'bg-gray-200'} mx-1"></div>`
-                    : "";
-                return `
-                    <div class="flex items-center flex-1">
-                        <div class="flex flex-col items-center gap-1">
-                            <div class="w-2.5 h-2.5 rounded-full ${dotColor}"></div>
-                            <span class="${textColor}">${labels[step]}</span>
-                        </div>
-                        ${line}
-                    </div>`;
-            }).join("") + (status === "cancelled" ? `<span class="text-red-600 font-semibold ml-2">Cancelled</span>` : "");
-        }
-
-        function renderActions(order) {
-            const btns = [];
-
-            if (order.status === "delivered") {
-                btns.push(`<button id="releaseBtn" class="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition">Release Payment</button>`);
-                btns.push(`<button id="revisionBtn" class="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Request Revision</button>`);
-            }
-            if (order.status === "pending" || order.status === "in_progress") {
-                btns.push(`<button id="cancelBtn" class="px-4 py-2 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition">Cancel Order</button>`);
-            }
-            if (order.status !== "completed" && order.status !== "cancelled") {
-                btns.push(`<button id="disputeBtn" class="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Open Dispute</button>`);
-            }
-            btns.push(`<a href="messages.html?order=${order.id}" class="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Message ${order.party.startsWith('Seller') ? 'Seller' : 'Buyer'}</a>`);
-
-            return btns.join("");
-        }
-
-        function openOrderModal(id) {
-            const order = orders.find(o => o.id === id);
-            if (!order) return;
-            activeOrderId = id;
-
-            document.getElementById("modalAlert").className = "hidden";
-            document.getElementById("modalOrderId").textContent = "Order #" + order.id;
-            document.getElementById("modalTitle").textContent = order.title;
-            document.getElementById("modalParty").textContent = order.party;
-            document.getElementById("modalAmount").textContent = money(order.amount);
-            document.getElementById("modalDue").textContent = order.due;
-
-            const e = escrowMeta[order.escrow];
-            const escrowEl = document.getElementById("modalEscrow");
-            escrowEl.textContent = e.label;
-            escrowEl.className = "font-semibold " + e.color;
-
-            document.getElementById("modalTimeline").innerHTML = renderTimeline(order.status);
-            document.getElementById("modalActions").innerHTML = renderActions(order);
-
-            attachActionHandlers(order);
-
-            const modal = document.getElementById("orderModal");
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-
-        function closeOrderModal() {
-            const modal = document.getElementById("orderModal");
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-            activeOrderId = null;
-        }
-
-        function showModalAlert(type, msg) {
-            const box = document.getElementById("modalAlert");
-            const styles = type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-red-50 border-red-200 text-red-800";
-            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
-            box.innerHTML = msg;
-        }
-
-        function updateOrder(id, changes) {
-            orders = orders.map(o => o.id === id ? { ...o, ...changes } : o);
-            saveOrders();
-        }
-
-        function attachActionHandlers(order) {
-            const releaseBtn  = document.getElementById("releaseBtn");
-            const revisionBtn = document.getElementById("revisionBtn");
-            const cancelBtn   = document.getElementById("cancelBtn");
-            const disputeBtn  = document.getElementById("disputeBtn");
-
-            if (releaseBtn) releaseBtn.addEventListener("click", () => {
-                if (!confirm("Release escrow payment to the seller? This confirms you're satisfied with the delivery.")) return;
-                // demo only — replace with: fetch(`/api/orders/${order.id}/release`, { method: 'POST' })
-                updateOrder(order.id, { status: "completed", escrow: "released" });
-                showModalAlert("success", "Payment released. Order marked as completed.");
-                renderOrders();
-                setTimeout(() => openOrderModal(order.id), 900);
-            });
-
-            if (revisionBtn) revisionBtn.addEventListener("click", () => {
-                // demo only — replace with: fetch(`/api/orders/${order.id}/revision`, { method: 'POST' })
-                updateOrder(order.id, { status: "in_progress" });
-                showModalAlert("success", "Revision requested. The seller has been notified.");
-                renderOrders();
-                setTimeout(() => openOrderModal(order.id), 900);
-            });
-
-            if (cancelBtn) cancelBtn.addEventListener("click", () => {
-                if (!confirm("Cancel this order? Escrow funds will be refunded.")) return;
-                // demo only — replace with: fetch(`/api/orders/${order.id}/cancel`, { method: 'POST' })
-                updateOrder(order.id, { status: "cancelled", escrow: "refunded" });
-                showModalAlert("success", "Order cancelled and payment refunded.");
-                renderOrders();
-                setTimeout(() => openOrderModal(order.id), 900);
-            });
-
-            if (disputeBtn) disputeBtn.addEventListener("click", () => {
-                // demo only — replace with: fetch(`/api/orders/${order.id}/dispute`, { method: 'POST' })
-                showModalAlert("success", "Dispute opened. Our support team will review this order within 24 hours.");
-            });
-        }
-
-        // Filter tabs
-        document.getElementById("filterTabs").addEventListener("click", (e) => {
-            const btn = e.target.closest(".filter-btn");
-            if (!btn) return;
-            currentFilter = btn.dataset.filter;
-
-            document.querySelectorAll(".filter-btn").forEach(b => {
-                b.classList.remove("bg-emerald-700", "text-white");
-                b.classList.add("text-gray-600");
-            });
-            btn.classList.add("bg-emerald-700", "text-white");
-            btn.classList.remove("text-gray-600");
-
-            renderOrders();
-        });
-
-        document.getElementById("closeModal").addEventListener("click", closeOrderModal);
-        document.getElementById("orderModal").addEventListener("click", (e) => {
-            if (e.target.id === "orderModal") closeOrderModal();
-        });
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape" && activeOrderId) closeOrderModal();
-        });
-
+requireLogin().then((res) => {
+    me = res.user;
+    watchMyOrders(me.uid, (data) => {
+        orders = data;
         renderOrders();
+
+        if (activeOrderId) {
+            const current = orders.find((x) => x.id === activeOrderId);
+            if (current) fillModal(current); else closeOrderModal();
+        }
+        if (!deepLinkHandled) {
+            deepLinkHandled = true;
+            const wanted = new URLSearchParams(window.location.search).get("order");
+            if (wanted) openOrderModal(wanted);
+        }
+    }, () => showAlert("Could not load your orders. Check your connection and that the Firestore rules are published."));
+});
     </script>
 </body>
 </html>
