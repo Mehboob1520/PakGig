@@ -92,9 +92,7 @@
         }
     </script>
     <script type="module">
-        import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        import { auth, db, isConfigured } from "./js/firebase.js";
+        import { supabase } from "./js/supabaseClient.js";
         import { friendlyAuthError } from "./js/session.js";
 
         const alertBox = document.getElementById("alertBox");
@@ -108,13 +106,8 @@
             alertBox.textContent = message;
         }
 
-        if (!isConfigured) {
-            showAlert("error", "Firebase is not set up yet. Paste your Firebase config into js/firebase.js.");
-        }
-
         document.getElementById("signupForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!isConfigured) return;
 
             const name = document.getElementById("fullName").value.trim();
             const email = document.getElementById("email").value.trim();
@@ -125,27 +118,22 @@
             submitBtn.textContent = "Creating account...";
             alertBox.className = "hidden";
 
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(cred.user, { displayName: name });
+            // full_name and role are picked up automatically by the database
+            // trigger that creates this user's profile row.
+            const { error } = await supabase.auth.signUp({
+                email, password,
+                options: { data: { full_name: name, role: role } }
+            });
 
-                // Profile document. If this fails (e.g. rules not published yet) the
-                // account still works; profile.html creates the document on first visit.
-                try {
-                    await setDoc(doc(db, "users", cred.user.uid), {
-                        fullName: name, email: email, role: role, createdAt: serverTimestamp()
-                    });
-                } catch (docErr) { console.warn("Profile document not saved:", docErr); }
-
-                try { await sendEmailVerification(cred.user); } catch (mailErr) {}
-
-                showAlert("success", "Welcome " + name + "! Account created. Redirecting...");
-                setTimeout(() => { window.location.href = "Services.html"; }, 1200);
-            } catch (err) {
-                showAlert("error", friendlyAuthError(err.code));
+            if (error) {
+                showAlert("error", friendlyAuthError(error.message));
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Create Account";
+                return;
             }
+
+            showAlert("success", "Welcome " + name + "! Account created. Redirecting...");
+            setTimeout(() => { window.location.href = "Services.html"; }, 1200);
         });
     </script>
 </body>

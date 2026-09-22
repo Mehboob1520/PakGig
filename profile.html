@@ -153,11 +153,10 @@
     <script type="module">
         import { requireLogin, bindLogout, friendlyAuthError } from "./js/session.js";
         import { auth, db } from "./js/firebase.js";
-        import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        import {
-            updateProfile, sendPasswordResetEmail, deleteUser,
-            reauthenticateWithCredential, EmailAuthProvider
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    <script type="module">
+        import { requireLogin, bindLogout, friendlyAuthError } from "./js/session.js";
+        import { supabase } from "./js/supabaseClient.js";
+        import { getMyProfile, updateMyProfile, deleteMyAccount } from "./js/data.js";
 
         bindLogout();
 
@@ -187,13 +186,13 @@
             $("displayName").textContent    = saved.fullName || "Your Name";
             $("displayTagline").textContent = saved.tagline  || "Add a short professional tagline";
 
-            const created = currentUser.metadata && currentUser.metadata.creationTime;
-            $("memberSince").textContent = created ? new Date(created).toLocaleDateString() : "—";
+            $("memberSince").textContent = currentUser.created_at
+                ? new Date(currentUser.created_at).toLocaleDateString() : "—";
 
             const role = saved.role || "buyer";
             $("accountType").textContent = role.charAt(0).toUpperCase() + role.slice(1);
 
-            if (currentUser.emailVerified) {
+            if (currentUser.email_confirmed_at) {
                 const badge = $("verifiedBadge");
                 badge.textContent = "Verified";
                 badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
@@ -201,23 +200,11 @@
         }
 
         async function loadProfile() {
-            const ref = doc(db, "users", currentUser.uid);
             try {
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    saved = snap.data();
-                } else {
-                    // Account created outside signup.html (e.g. in the Firebase Console)
-                    saved = {
-                        fullName: currentUser.displayName || (currentUser.email || "").split("@")[0],
-                        email: currentUser.email,
-                        role: "buyer"
-                    };
-                    await setDoc(ref, Object.assign({}, saved, { createdAt: serverTimestamp() }));
-                }
+                saved = await getMyProfile(currentUser);
             } catch (err) {
-                saved = { fullName: currentUser.displayName || "", role: "buyer" };
-                showAlert("error", "Could not load your saved profile. Check your connection and that the Firestore rules are published.");
+                saved = { fullName: currentUser.user_metadata?.full_name || "", role: "buyer" };
+                showAlert("error", "Could not load your saved profile. Check your connection.");
             }
             render();
         }
@@ -254,8 +241,7 @@
             };
 
             try {
-                await setDoc(doc(db, "users", currentUser.uid), updates, { merge: true });
-                await updateProfile(currentUser, { displayName: fullName });
+                await updateMyProfile(currentUser, updates);
                 saved = Object.assign({}, saved, updates);
                 $("displayName").textContent = fullName;
                 $("displayTagline").textContent = updates.tagline || "Add a short professional tagline";
@@ -270,28 +256,22 @@
         $("cancelBtn").addEventListener("click", render);
 
         $("changePwBtn").addEventListener("click", async () => {
-            try {
-                await sendPasswordResetEmail(auth, currentUser.email);
+            const { error } = await supabase.auth.resetPasswordForEmail(currentUser.email);
+            if (error) {
+                showAlert("error", friendlyAuthError(error.message));
+            } else {
                 showAlert("success", "Password reset link sent to " + currentUser.email + ".");
-            } catch (err) {
-                showAlert("error", friendlyAuthError(err.code));
             }
         });
 
         $("deleteAccountBtn").addEventListener("click", async () => {
             if (!confirm("Are you sure you want to permanently delete your PakGig account? This cannot be undone.")) return;
-            const password = prompt("Enter your password to confirm:");
-            if (!password) return;
 
             try {
-                const credential = EmailAuthProvider.credential(currentUser.email, password);
-                await reauthenticateWithCredential(currentUser, credential);
-                await deleteDoc(doc(db, "users", currentUser.uid));
-                await deleteUser(currentUser);
-                ["userLoggedIn", "userRole", "pakgigProfile"].forEach((k) => localStorage.removeItem(k));
+                await deleteMyAccount();
                 window.location.href = "index.html";
             } catch (err) {
-                showAlert("error", friendlyAuthError(err.code));
+                showAlert("error", friendlyAuthError(err.message));
             }
         });
 

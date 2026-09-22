@@ -58,11 +58,7 @@
     </div>
 
     <script type="module">
-        import {
-            signInWithEmailAndPassword, sendPasswordResetEmail,
-            setPersistence, browserLocalPersistence, browserSessionPersistence
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { auth, isConfigured } from "./js/firebase.js";
+        import { supabase } from "./js/supabaseClient.js";
         import { friendlyAuthError } from "./js/session.js";
 
         const alertBox = document.getElementById("alertBox");
@@ -78,43 +74,40 @@
             alertBox.textContent = message;
         }
 
-        if (!isConfigured) {
-            showAlert("error", "Firebase is not set up yet. Paste your Firebase config into js/firebase.js.");
-        }
-
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!isConfigured) return;
 
             loginBtn.disabled = true;
             loginBtn.textContent = "Authenticating...";
             alertBox.className = "hidden";
 
-            try {
-                const remember = document.getElementById("remember").checked;
-                await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-                await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-                showAlert("success", "Logged in successfully! Redirecting...");
-                setTimeout(() => { window.location.href = "Services.html"; }, 600);
-            } catch (err) {
-                showAlert("error", friendlyAuthError(err.code));
+            const { error } = await supabase.auth.signInWithPassword({
+                email: emailInput.value.trim(),
+                password: passwordInput.value
+            });
+
+            if (error) {
+                showAlert("error", friendlyAuthError(error.message));
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Sign In";
+                return;
             }
+
+            showAlert("success", "Logged in successfully! Redirecting...");
+            setTimeout(() => { window.location.href = "Services.html"; }, 600);
         });
 
         document.getElementById("forgotBtn").addEventListener("click", async () => {
-            if (!isConfigured) return;
             const email = emailInput.value.trim();
             if (!email) {
                 showAlert("error", "Enter your email above first, then press Forgot password.");
                 return;
             }
-            try {
-                await sendPasswordResetEmail(auth, email);
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error) {
+                showAlert("error", friendlyAuthError(error.message));
+            } else {
                 showAlert("success", "If an account exists for this email, a reset link has been sent.");
-            } catch (err) {
-                showAlert("error", friendlyAuthError(err.code));
             }
         });
     </script>
