@@ -50,6 +50,11 @@
     <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><p class="text-xs font-semibold text-gray-400">Available to withdraw</p><p class="text-3xl font-extrabold text-emerald-700 mt-2" id="statAvailable">Rs. 0</p><a href="escrow.html" class="text-xs font-semibold text-emerald-700 hover:underline">Payments &amp; withdrawals →</a></div>
   </div>
 
+  <div id="myGigsSection" style="display:none" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
+    <div class="flex items-center justify-between mb-2"><h2 class="text-lg font-bold text-gray-900">My gigs</h2><a href="create-gig.html" class="text-xs font-semibold text-emerald-700 hover:underline">+ Create New Gig</a></div>
+    <div id="myGigsList" class="divide-y divide-gray-100"></div>
+  </div>
+
   <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
     <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-gray-900">Recent orders</h2><a href="order.html" class="text-xs font-semibold text-emerald-700 hover:underline">View all →</a></div>
     <div class="overflow-x-auto">
@@ -63,8 +68,8 @@
 
 <script type="module">
   import { requireLogin, bindLogout } from "./js/session.js";
-  import { watchMyOrders, watchMyWithdrawals, getMyProfile } from "./js/data.js";
-  import { esc, money, roleIn, STATUS_META, sellerTotals, buyerHeld } from "./js/ledger.js";
+  import { watchMyOrders, watchMyWithdrawals, getMyProfile, listMyGigs, deleteGig } from "./js/data.js";
+  import { esc, money, roleIn, CATEGORIES, STATUS_META, sellerTotals, buyerHeld } from "./js/ledger.js";
 
   bindLogout("index.html");
 
@@ -105,6 +110,54 @@
     }).join("") || `<tr><td colspan="6" class="py-8 px-4 text-center text-gray-400 text-xs">No orders yet. <a href="Services.html" class="text-emerald-700 font-semibold hover:underline">Browse services</a> to place your first one.</td></tr>`;
   }
 
+  // ---------- My gigs (sellers) ----------
+  let myGigs = [];
+
+  function notify(ok, msg) {
+    const box = $("dashAlert");
+    box.className = "p-3 rounded-lg text-xs font-medium border mb-6 " +
+      (ok ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800");
+    box.textContent = msg;
+  }
+
+  function renderMyGigs() {
+    $("myGigsList").innerHTML = myGigs.map((g) => `
+      <div class="flex items-center justify-between gap-4 py-3">
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-gray-900 truncate">${esc(g.title)}</p>
+          <p class="text-xs text-gray-500 mt-0.5">${esc(CATEGORIES[g.category] || "Service")} &middot; ${money(g.price)} &middot; ${esc(g.deliveryDays)} days</p>
+        </div>
+        <button data-id="${esc(g.id)}" class="deleteGigBtn shrink-0 text-xs font-semibold text-red-600 hover:text-red-800">Delete</button>
+      </div>`).join("") ||
+      `<p class="py-6 text-center text-xs text-gray-400">You have no gigs yet. Use "+ Create New Gig" to add your first one.</p>`;
+  }
+
+  async function loadMyGigs() {
+    $("myGigsSection").style.display = "";
+    try { myGigs = await listMyGigs(me.uid); } catch (e) { myGigs = []; }
+    renderMyGigs();
+  }
+
+  $("myGigsList").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".deleteGigBtn");
+    if (!btn) return;
+    const gig = myGigs.find((g) => g.id === btn.dataset.id);
+    if (!gig) return;
+    if (!confirm(`Delete "${gig.title}"? Buyers will no longer see it.`)) return;
+
+    btn.disabled = true;
+    try {
+      const result = await deleteGig(gig.id);
+      notify(true, result === "hidden"
+        ? `"${gig.title}" has been removed from Services. It already has orders, so the order history is kept.`
+        : `"${gig.title}" has been deleted.`);
+      await loadMyGigs();
+    } catch (err) {
+      btn.disabled = false;
+      notify(false, "Could not delete this gig. Please try again.");
+    }
+  });
+
   requireLogin().then(async (res) => {
     me = res.user;
     try { profile = await getMyProfile(me); } catch (e) {}
@@ -120,6 +173,7 @@
     };
     watchMyOrders(me.uid, (data) => { orders = data; render(); }, onError);
     if (isSeller()) watchMyWithdrawals(me.uid, (data) => { withdrawals = data; render(); }, onError);
+    if (isSeller()) loadMyGigs();
     render();
   });
 </script>
