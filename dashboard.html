@@ -37,7 +37,7 @@
     </div>
     <div class="flex gap-3">
       <a href="Services.html" class="inline-flex items-center justify-center border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 rounded-lg">Browse services</a>
-      <a href="create-gig.html" id="createGigLink" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">+ Create New Gig</a>
+      <a href="create-gig.html" id="createGigLink" style="display:none" class="inline-flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">+ Create New Gig</a>
     </div>
   </div>
 
@@ -74,6 +74,9 @@
   function isSeller() { return profile.role === "seller" || profile.role === "admin"; }
 
   function render() {
+    // Only sellers and admins can create gigs
+    $("createGigLink").style.display = isSeller() ? "" : "none";
+
     $("statActive").textContent = orders.filter((o) => ["pending", "in_progress", "delivered"].includes(o.status)).length;
     $("statDone").textContent = orders.filter((o) => o.status === "completed").length;
 
@@ -104,14 +107,15 @@
 
   requireLogin().then(async (res) => {
     me = res.user;
-    const name = (me.displayName || me.email || "").trim();
+    try { profile = await getMyProfile(me); } catch (e) {}
+
+    const name = ((profile && profile.fullName) || me.displayName || me.email || "").trim();
     $("navAvatar").textContent = name ? name.charAt(0).toUpperCase() : "U";
     $("welcome").textContent = "Welcome back, " + (name.split(" ")[0] || "there") + "!";
-    try { profile = await getMyProfile(me); } catch (e) {}
 
     const onError = () => {
       const box = $("dashAlert");
-      box.textContent = "Could not load your data. Check your connection and that the Firestore rules are published.";
+      box.textContent = "Could not load your data. Check your internet connection and try again.";
       box.classList.remove("hidden");
     };
     watchMyOrders(me.uid, (data) => { orders = data; render(); }, onError);
