@@ -1,6 +1,6 @@
 /* PakGig — Data access helpers (Supabase version)
    Talks to the profiles / gigs / orders / messages / withdrawals tables
-   and the database functions (create_gig, create_order, order_action,
+   and the database functions (create_gig, delete_gig, create_order, order_action,
    request_withdrawal, mark_withdrawal_paid, admin_set_user_status,
    delete_my_account) that are already set up in Supabase. */
 import { supabase } from "./supabaseClient.js";
@@ -120,11 +120,34 @@ export async function listGigs() {
     }));
 }
 
+// The logged-in seller's own active gigs (newest first).
+export async function listMyGigs(uid) {
+    const { data, error } = await supabase
+        .from("gigs")
+        .select("*")
+        .eq("seller_id", uid)
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data || []).map((g) => ({
+        id: g.id, title: g.title, category: g.category,
+        price: Number(g.price), deliveryDays: g.delivery_days
+    }));
+}
+
 export async function createGig({ title, description, category, price, deliveryDays }) {
     const { data, error } = await supabase.rpc("create_gig", {
         p_title: title, p_description: description, p_category: category,
         p_price: price, p_delivery_days: deliveryDays
     });
+    if (error) throw error;
+    return data;
+}
+
+// Removes a gig. Returns "deleted" (gone completely) or "hidden" (the gig
+// already has orders, so it is only hidden from Services and order history stays).
+export async function deleteGig(gigId) {
+    const { data, error } = await supabase.rpc("delete_gig", { p_gig_id: gigId });
     if (error) throw error;
     return data;
 }
