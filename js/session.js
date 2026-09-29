@@ -16,11 +16,21 @@ export function friendlyAuthError(message) {
     return message || "Kuch masla ho gaya, dobara koshish karein.";
 }
 
+// Supabase users have `id`; the pages were written using `uid` and
+// `displayName`. This adds those two names so every page works the same.
+function withAliases(user) {
+    if (!user) return user;
+    return Object.assign({}, user, {
+        uid: user.id,
+        displayName: (user.user_metadata && user.user_metadata.full_name) || ""
+    });
+}
+
 // Resolves with the logged-in user (or null) once Supabase has checked
 // the current session.
 export async function whenAuthReady() {
     const { data } = await supabase.auth.getSession();
-    return data.session ? data.session.user : null;
+    return data.session ? withAliases(data.session.user) : null;
 }
 
 // For pages that require a logged-in user: redirects to login.html (or
@@ -33,7 +43,7 @@ export async function requireLogin(opts = {}) {
         window.location.href = "login.html";
         return new Promise(() => {}); // page is navigating away
     }
-    const user = session.user;
+    const user = withAliases(session.user);
     if (opts.adminOnly) {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
         if (!profile || profile.role !== "admin") {
