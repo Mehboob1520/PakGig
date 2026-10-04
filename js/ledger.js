@@ -44,7 +44,7 @@ export const ESCROW_META = {
 
 // Platform fee: PakGig takes 5% of every order; the seller receives the rest.
 export function feeFor(amount) {
-    return Math.round(Number(amount || 0) * 0.05);
+    return Math.round(Number(amount || 0) * 0.08);
 }
 export function payoutFor(amount) {
     return Number(amount || 0) - feeFor(amount);
