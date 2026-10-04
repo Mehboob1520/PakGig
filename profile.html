@@ -1,295 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PakGig - My Profile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Gig - PakGig</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-800">
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="dashboard.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+      <a href="dashboard.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Back to Dashboard</a>
+    </div>
+  </header>
 
-    <!-- Top Nav -->
-    <nav class="bg-white border-b border-gray-100 shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
-            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
-                <a href="Services.html" class="hover:text-emerald-700">Services</a>
-                <a href="order.html" class="hover:text-emerald-700">Orders</a>
-                <a href="profile.html" class="text-emerald-700">Profile</a>
-                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
-            </div>
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Create a new gig</h1>
+      <p class="text-sm text-gray-500 mb-6">List your service and start receiving orders securely.</p>
+
+      <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border mb-6"></div>
+
+      <form id="gigForm" class="space-y-5">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Gig title</label>
+          <input id="title" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. WordPress website design" />
         </div>
-    </nav>
-
-    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
-
-        <!-- Alert -->
-        <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
-
-        <!-- Profile Header Card -->
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <!-- Avatar -->
-                <div class="relative shrink-0">
-                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile photo" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
-                    <label for="avatarInput" class="absolute bottom-0 right-0 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md text-xs">
-                        ✎
-                    </label>
-                    <input type="file" id="avatarInput" accept="image/*" class="hidden">
-                </div>
-
-                <!-- Basic info -->
-                <div class="flex-1 text-center sm:text-left space-y-1">
-                    <h1 id="displayName" class="text-xl font-bold text-gray-900">Your Name</h1>
-                    <p id="displayTagline" class="text-sm text-gray-500">Add a short professional tagline</p>
-                    <div class="flex items-center justify-center sm:justify-start gap-1 text-amber-500 text-sm pt-1">
-                        <span>★★★★★</span>
-                        <span class="text-gray-500 text-xs">(<span id="reviewCount">0</span> reviews)</span>
-                    </div>
-                    <p class="text-xs text-gray-400 pt-1">Member since <span id="memberSince">—</span></p>
-                </div>
-
-                <!-- Quick stats -->
-                <div class="grid grid-cols-3 gap-4 text-center shrink-0">
-                    <div>
-                        <p class="text-lg font-bold text-gray-900" id="statOrders">0</p>
-                        <p class="text-[11px] text-gray-500">Orders</p>
-                    </div>
-                    <div>
-                        <p class="text-lg font-bold text-gray-900" id="statActive">0</p>
-                        <p class="text-[11px] text-gray-500">Active</p>
-                    </div>
-                    <div>
-                        <p class="text-lg font-bold text-emerald-700" id="statEscrow">Rs. 0</p>
-                        <p class="text-[11px] text-gray-500">In Escrow</p>
-                    </div>
-                </div>
-            </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Category</label>
+          <select id="category" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            <option value="web">Web & App Development</option>
+            <option value="design">Graphics & Design</option>
+            <option value="seo">Digital Marketing</option>
+          </select>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <!-- Edit Profile Form -->
-            <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8 space-y-5">
-                <h2 class="text-base font-bold text-gray-900">Edit Profile</h2>
-
-                <form id="profileForm" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Full Name</label>
-                            <input type="text" id="fullName" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Ahmed Khan">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Professional Title</label>
-                            <input type="text" id="tagline" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Full-Stack Web Developer">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
-                            <input type="email" id="email" required readonly title="Email cannot be changed here" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="name@example.com">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1">Phone Number</label>
-                            <input type="tel" id="phone" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="03XX-XXXXXXX">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">City</label>
-                        <input type="text" id="city" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Lahore">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Skills (comma separated)</label>
-                        <input type="text" id="skills" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Web Design, WordPress, SEO">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">About Me</label>
-                        <textarea id="bio" rows="4" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none" placeholder="Tell buyers a bit about your experience..."></textarea>
-                    </div>
-
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit" id="saveBtn" class="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed">
-                            Save Changes
-                        </button>
-                        <button type="button" id="cancelBtn" class="px-6 py-2.5 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Sidebar: account/security -->
-            <div class="space-y-6">
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 space-y-4">
-                    <h2 class="text-base font-bold text-gray-900">Account & Security</h2>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Account type</span>
-                        <span id="accountType" class="font-semibold text-gray-900">Buyer</span>
-                    </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Email verified</span>
-                        <span id="verifiedBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
-                    </div>
-
-                    <hr class="border-gray-100">
-
-                    <button type="button" id="changePwBtn" class="block text-xs font-semibold text-emerald-700 hover:underline">Change Password →</button>
-                    <button type="button" id="deleteAccountBtn" class="block text-xs font-semibold text-red-600 hover:underline">Delete Account</button>
-                </div>
-            </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+          <textarea id="description" required rows="5" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Describe what you offer and what buyer gets."></textarea>
         </div>
-    </main>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Price (PKR)</label>
+            <input id="price" type="number" min="1" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="5000" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Delivery days</label>
+            <input id="deliveryDays" type="number" min="1" value="7" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          </div>
+        </div>
+        <button type="submit" id="submitBtn" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition">Publish gig</button>
+      </form>
+    </div>
+  </main>
 
-    <script type="module">
-        import { requireLogin, bindLogout, friendlyAuthError } from "./js/session.js";
-        import { supabase } from "./js/supabaseClient.js";
-        import { getMyProfile, updateMyProfile, deleteMyAccount, watchMyOrders } from "./js/data.js";
-        import { money, sellerTotals, buyerHeld } from "./js/ledger.js";
+  <script type="module">
+    import { requireLogin } from './js/session.js';
+    import { createGig } from './js/data.js';
 
-        bindLogout();
+    const alertBox = document.getElementById('alertBox');
+    const form = document.getElementById('gigForm');
+    const submitBtn = document.getElementById('submitBtn');
 
-        const $ = (id) => document.getElementById(id);
-        let currentUser = null;
-        let saved = {};
+    function showAlert(type, message) {
+      const styles = type === 'success'
+        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+        : 'bg-red-50 border-red-200 text-red-800';
+      alertBox.className = 'p-3 rounded-lg text-xs font-medium border block ' + styles;
+      alertBox.textContent = message;
+    }
 
-        function showAlert(type, msg) {
-            const styles = type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-red-50 border-red-200 text-red-800";
-            const box = $("alertBox");
-            box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
-            box.textContent = msg;
-            window.scrollTo({ top: 0, behavior: "smooth" });
+    requireLogin().then(() => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Publishing...';
+
+        try {
+          await createGig({
+            title: document.getElementById('title').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            category: document.getElementById('category').value,
+            price: Number(document.getElementById('price').value),
+            deliveryDays: Number(document.getElementById('deliveryDays').value)
+          });
+
+          showAlert('success', 'Gig published successfully.');
+          form.reset();
+          setTimeout(() => window.location.href = 'dashboard.html', 800);
+        } catch (err) {
+          showAlert('error', err?.message || 'Could not create gig.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Publish gig';
         }
-
-        function render() {
-            $("fullName").value = saved.fullName || "";
-            $("tagline").value  = saved.tagline  || "";
-            $("email").value    = currentUser.email || "";
-            $("phone").value    = saved.phone    || "";
-            $("city").value     = saved.city     || "";
-            $("skills").value   = saved.skills   || "";
-            $("bio").value      = saved.bio      || "";
-
-            $("displayName").textContent    = saved.fullName || "Your Name";
-            $("avatarPreview").src = "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(saved.fullName || "User") + "&backgroundColor=047857&textColor=ffffff";
-            $("displayTagline").textContent = saved.tagline  || "Add a short professional tagline";
-
-            $("memberSince").textContent = currentUser.created_at
-                ? new Date(currentUser.created_at).toLocaleDateString() : "—";
-
-            const role = saved.role || "buyer";
-            $("accountType").textContent = role.charAt(0).toUpperCase() + role.slice(1);
-
-            if (currentUser.email_confirmed_at) {
-                const badge = $("verifiedBadge");
-                badge.textContent = "Verified";
-                badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
-            }
-        }
-
-        async function loadProfile() {
-            try {
-                saved = await getMyProfile(currentUser);
-            } catch (err) {
-                saved = { fullName: currentUser.user_metadata?.full_name || "", role: "buyer" };
-                showAlert("error", "Could not load your saved profile. Check your connection.");
-            }
-            render();
-        }
-
-        // Avatar preview (client-side only; upload to storage separately)
-        $("avatarInput").addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => { $("avatarPreview").src = ev.target.result; };
-            reader.readAsDataURL(file);
-        });
-
-        $("profileForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const saveBtn = $("saveBtn");
-            const fullName = $("fullName").value.trim();
-
-            if (!fullName) {
-                showAlert("error", "Please enter your full name.");
-                return;
-            }
-
-            saveBtn.disabled = true;
-            saveBtn.textContent = "Saving...";
-
-            const updates = {
-                fullName: fullName,
-                tagline: $("tagline").value.trim(),
-                phone: $("phone").value.trim(),
-                city: $("city").value.trim(),
-                skills: $("skills").value.trim(),
-                bio: $("bio").value.trim()
-            };
-
-            try {
-                await updateMyProfile(currentUser, updates);
-                saved = Object.assign({}, saved, updates);
-                $("displayName").textContent = fullName;
-                $("displayTagline").textContent = updates.tagline || "Add a short professional tagline";
-                showAlert("success", "Profile updated successfully.");
-            } catch (err) {
-                showAlert("error", "Could not save your profile. Please try again.");
-            }
-            saveBtn.disabled = false;
-            saveBtn.textContent = "Save Changes";
-        });
-
-        $("cancelBtn").addEventListener("click", render);
-
-        $("changePwBtn").addEventListener("click", async () => {
-            const { error } = await supabase.auth.resetPasswordForEmail(currentUser.email);
-            if (error) {
-                showAlert("error", friendlyAuthError(error.message));
-            } else {
-                showAlert("success", "Password reset link sent to " + currentUser.email + ".");
-            }
-        });
-
-        $("deleteAccountBtn").addEventListener("click", async () => {
-            if (!confirm("Are you sure you want to permanently delete your PakGig account? This cannot be undone.")) return;
-
-            try {
-                await deleteMyAccount();
-                window.location.href = "index.html";
-            } catch (err) {
-                showAlert("error", friendlyAuthError(err.message));
-            }
-        });
-
-        // Fills the Orders / Active / In Escrow numbers at the top of the page.
-        function renderStats(orders) {
-            const isSeller = saved.role === "seller" || saved.role === "admin";
-            $("statOrders").textContent = orders.length;
-            $("statActive").textContent = orders.filter((o) => ["pending", "in_progress", "delivered"].includes(o.status)).length;
-            const held = isSeller
-                ? sellerTotals(orders, [], currentUser.uid).held
-                : buyerHeld(orders, currentUser.uid);
-            $("statEscrow").textContent = money(held);
-        }
-
-        requireLogin().then(async (res) => {
-            currentUser = res.user;
-            await loadProfile();
-            watchMyOrders(currentUser.uid, renderStats, () => {});
-        });
-    </script>
+      });
+    });
+  </script>
 </body>
 </html>

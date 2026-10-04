@@ -1,227 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PakGig - Messages</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .chat-scroll::-webkit-scrollbar { width: 5px; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders - PakGig</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+<body class="bg-gray-50 min-h-screen text-gray-800">
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="dashboard.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+      <a href="dashboard.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Dashboard</a>
+    </div>
+  </header>
 
-    <!-- Top Nav -->
-    <nav class="bg-white border-b border-gray-100 shadow-sm shrink-0">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
-            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
-                <a href="Services.html" class="hover:text-emerald-700">Services</a>
-                <a href="order.html" class="hover:text-emerald-700">Orders</a>
-                <a href="messages.html" class="text-emerald-700">Messages</a>
-                <a href="profile.html" class="hover:text-emerald-700">Profile</a>
-                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
-            </div>
-        </div>
-    </nav>
+  <main class="max-w-4xl mx-auto px-4 py-10">
+    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Your order</h1>
+      <p class="text-sm text-gray-500 mb-6">Track progress, status, and order history.</p>
 
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 min-h-0">
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 h-full flex overflow-hidden">
+      <div id="orderContent" class="space-y-4"></div>
+    </div>
+  </main>
 
-            <!-- Conversation list -->
-            <aside class="w-full sm:w-80 border-r border-gray-100 flex flex-col shrink-0" id="conversationPane">
-                <div class="p-4 border-b border-gray-100">
-                    <h1 class="text-base font-bold text-gray-900">Messages</h1>
-                    <input type="text" id="searchConvo" placeholder="Search conversations..." class="mt-2 w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
-                <div id="conversationList" class="flex-1 overflow-y-auto chat-scroll divide-y divide-gray-50"></div>
-            </aside>
+  <script type="module">
+    import { requireLogin } from './js/session.js';
+    import { watchMyOrders, orderAction } from './js/data.js';
 
-            <!-- Active chat -->
-            <section class="flex-1 flex flex-col min-w-0" id="chatPane">
-                <!-- Header -->
-                <div class="p-4 border-b border-gray-100 flex items-center gap-3 shrink-0">
-                    <button id="backToList" class="sm:hidden text-gray-500 text-lg">←</button>
-                    <img id="chatAvatar" src="" alt="" class="w-9 h-9 rounded-full object-cover">
-                    <div class="min-w-0">
-                        <p id="chatName" class="font-semibold text-sm text-gray-900 truncate">Select a conversation</p>
-                        <a id="chatOrderLink" href="#" class="text-[11px] text-emerald-700 hover:underline hidden">View Order →</a>
-                    </div>
-                </div>
+    const orderContent = document.getElementById('orderContent');
 
-                <!-- Messages -->
-                <div id="messagesArea" class="flex-1 overflow-y-auto chat-scroll p-4 space-y-3 bg-gray-50/50"></div>
+    requireLogin().then(({ user }) => {
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get('order');
 
-                <!-- No conversation selected -->
-                <div id="noChatState" class="flex-1 flex items-center justify-center text-sm text-gray-400">
-                    Select a conversation to start chatting
-                </div>
+      watchMyOrders(user.id, (orders) => {
+        const order = orders.find((o) => o.id === targetId) || orders[0];
 
-                <!-- Input -->
-                <form id="messageForm" class="hidden p-3 border-t border-gray-100 shrink-0 items-center gap-2">
-                    <label for="attachInput" class="cursor-pointer text-gray-400 hover:text-emerald-700 px-1 text-lg" title="Attach file">📎</label>
-                    <input type="file" id="attachInput" class="hidden">
-                    <input type="text" id="messageInput" autocomplete="off" placeholder="Type your message..." class="flex-1 px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    <button type="submit" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition">Send</button>
-                </form>
-            </section>
-        </div>
-    </main>
-
-    <script type="module">
-import { requireLogin, bindLogout } from "./js/session.js";
-import { watchMyOrders, watchMessages, sendMessage, formatTime } from "./js/data.js";
-import { esc, shortId, roleIn } from "./js/ledger.js";
-
-bindLogout();
-
-const $ = (id) => document.getElementById(id);
-
-let me = null;
-let myName = "";
-let conversations = [];   // one per order
-let activeId = null;
-let messages = [];
-let stopMessages = null;
-
-// File sharing is not built yet — hide the paperclip instead of pretending to upload.
-const attach = $("attachInput");
-if (attach) {
-    const wrapper = attach.closest("label") || attach.parentElement;
-    if (wrapper) wrapper.classList.add("hidden");
-}
-
-function avatarUrl(seed) {
-    return "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(seed) + "&backgroundColor=047857&textColor=ffffff";
-}
-
-function otherName(o) {
-    return roleIn(o, me.uid) === "seller" ? o.buyerName : o.sellerName;
-}
-
-function renderConversationList(filter) {
-    const q = (filter || "").trim().toLowerCase();
-    const list = conversations.filter((o) =>
-        otherName(o).toLowerCase().includes(q) || String(o.title).toLowerCase().includes(q));
-
-    $("conversationList").innerHTML = list.map((o) => {
-        const active = o.id === activeId ? "bg-emerald-50" : "hover:bg-gray-50";
-        return `
-        <button data-id="${esc(o.id)}" class="convoBtn w-full text-left p-3.5 flex items-center gap-3 ${active} transition">
-            <img src="${avatarUrl(otherName(o))}" class="w-10 h-10 rounded-full shrink-0" alt="">
-            <div class="min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="text-sm font-semibold text-gray-900 truncate">${esc(otherName(o))}</p>
-                    <span class="text-[10px] text-gray-400 shrink-0">#${esc(shortId(o.id))}</span>
-                </div>
-                <p class="text-xs text-gray-500 truncate">${esc(o.title)}</p>
-            </div>
-        </button>`;
-    }).join("") || `<p class="text-xs text-gray-400 text-center py-8 px-4">No conversations yet. A chat appears here once you place or receive an order.</p>`;
-}
-
-function renderMessages() {
-    const area = $("messagesArea");
-    area.innerHTML = messages.map((m) => {
-        const isMe = m.senderId === me.uid;
-        return `
-        <div class="flex ${isMe ? "justify-end" : "justify-start"}">
-            <div class="max-w-[75%] ${isMe ? "bg-emerald-700 text-white" : "bg-white text-gray-800 border border-gray-200"} rounded-2xl px-4 py-2 text-sm shadow-sm">
-                <p class="whitespace-pre-wrap break-words">${esc(m.text)}</p>
-                <p class="text-[10px] mt-1 ${isMe ? "text-emerald-100" : "text-gray-400"}">${esc(formatTime(m.createdAt))}</p>
-            </div>
-        </div>`;
-    }).join("");
-    area.scrollTop = area.scrollHeight;
-}
-
-function openConversation(id) {
-    const o = conversations.find((x) => x.id === id);
-    if (!o) return;
-    activeId = id;
-
-    $("noChatState").classList.add("hidden");
-    $("messagesArea").classList.remove("hidden");
-    $("messageForm").classList.remove("hidden");
-    $("messageForm").classList.add("flex");
-
-    $("chatAvatar").src = avatarUrl(otherName(o));
-    $("chatName").textContent = otherName(o);
-
-    const link = $("chatOrderLink");
-    link.href = "order.html?order=" + encodeURIComponent(o.id);
-    link.textContent = "Order #" + shortId(o.id) + " →";
-    link.classList.remove("hidden");
-
-    if (stopMessages) stopMessages();
-    messages = [];
-    renderMessages();
-    stopMessages = watchMessages(o.id, (data) => {
-        messages = data;
-        renderMessages();
-    }, () => {
-        $("messagesArea").innerHTML = `<p class="text-xs text-red-600 text-center py-6">Could not load messages. Check your connection and the Firestore rules.</p>`;
-    });
-
-    renderConversationList($("searchConvo").value);
-
-    if (window.innerWidth < 640) {
-        $("conversationPane").classList.add("hidden");
-        $("chatPane").classList.remove("hidden");
-    }
-}
-
-$("conversationList").addEventListener("click", (e) => {
-    const btn = e.target.closest(".convoBtn");
-    if (btn) openConversation(btn.dataset.id);
-});
-
-$("backToList").addEventListener("click", () => {
-    $("conversationPane").classList.remove("hidden");
-    $("chatPane").classList.add("hidden");
-});
-
-$("searchConvo").addEventListener("input", (e) => renderConversationList(e.target.value));
-
-$("messageForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const input = $("messageInput");
-    const text = input.value.trim();
-    if (!text || !activeId) return;
-    input.value = "";
-    try {
-        await sendMessage(activeId, me, myName, text.slice(0, 2000));
-    } catch (err) {
-        input.value = text; // give the text back so nothing is lost
-        alert("Message could not be sent. Please try again.");
-    }
-});
-
-let firstLoad = true;
-requireLogin().then((res) => {
-    me = res.user;
-    myName = me.displayName || (me.email || "").split("@")[0];
-
-    watchMyOrders(me.uid, (data) => {
-        conversations = data;
-        renderConversationList($("searchConvo").value);
-
-        if (firstLoad) {
-            firstLoad = false;
-            const wanted = new URLSearchParams(window.location.search).get("order");
-            if (wanted && conversations.some((o) => o.id === wanted)) {
-                openConversation(wanted);
-            } else if (window.innerWidth >= 640 && conversations.length) {
-                openConversation(conversations[0].id);
-            }
+        if (!order) {
+          orderContent.innerHTML = '<div class="text-sm text-gray-500">No order found.</div>';
+          return;
         }
-    }, () => {
-        $("conversationList").innerHTML = `<p class="text-xs text-red-600 text-center py-8 px-4">Could not load conversations. Check your connection and the Firestore rules.</p>`;
+
+        const isSeller = user.id === order.sellerId;
+        const actions = [];
+        if (isSeller) {
+          actions.push({label: 'Mark Delivered', value: 'deliver'});
+          actions.push({label: 'Cancel', value: 'cancel'});
+        } else {
+          actions.push({label: 'Accept Delivery', value: 'complete'});
+        }
+
+        orderContent.innerHTML = `
+          <div class="border border-gray-200 rounded-xl p-5">
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <div class="text-xs uppercase tracking-wide font-semibold text-emerald-700">${order.status}</div>
+                <h2 class="text-xl font-bold text-gray-900 mt-1">${order.title}</h2>
+              </div>
+              <div class="text-right">
+                <div class="text-xs text-gray-500">Amount</div>
+                <div class="text-xl font-bold text-gray-900">PKR ${Number(order.amount).toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div class="bg-gray-50 p-3 rounded-lg"><div class="text-xs text-gray-500">Buyer</div><div class="font-semibold text-gray-900">${order.buyerName || '—'}</div></div>
+              <div class="bg-gray-50 p-3 rounded-lg"><div class="text-xs text-gray-500">Seller</div><div class="font-semibold text-gray-900">${order.sellerName || '—'}</div></div>
+              <div class="bg-gray-50 p-3 rounded-lg"><div class="text-xs text-gray-500">Escrow</div><div class="font-semibold text-gray-900">${order.escrow || 'Not set'}</div></div>
+            </div>
+
+            <div class="mt-5 flex flex-wrap gap-3">
+              ${actions.map((a) => `<button data-action="${a.value}" class="actionBtn bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-4 py-2 rounded-lg">${a.label}</button>`).join('')}
+            </div>
+          </div>
+        `;
+
+        document.querySelectorAll('.actionBtn').forEach((button) => {
+          button.addEventListener('click', async () => {
+            try {
+              await orderAction(order.id, button.dataset.action);
+              window.location.reload();
+            } catch (err) {
+              alert(err?.message || 'Could not update order.');
+            }
+          });
+        });
+      });
     });
-});
-    </script>
+  </script>
 </body>
 </html>
