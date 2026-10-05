@@ -1,106 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Profile - PakGig</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig - My Orders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="dashboard.html" class="text-2xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
-      <a href="dashboard.html" class="text-sm font-semibold text-gray-600 hover:text-emerald-700">Back to Dashboard</a>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Top Nav -->
+    <nav class="bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
+            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
+                <a href="Services.html" class="hover:text-emerald-700">Services</a>
+                <a href="order.html" class="text-emerald-700">Orders</a>
+                <a href="profile.html" class="hover:text-emerald-700">Profile</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+        <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">My Orders</h1>
+                <p class="text-xs text-gray-500 mt-1">Track your orders and escrow-protected payments</p>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 text-xs font-semibold" id="filterTabs">
+                <button data-filter="all" class="filter-btn px-3 py-1.5 rounded-md bg-emerald-700 text-white">All</button>
+                <button data-filter="active" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Active</button>
+                <button data-filter="delivered" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Delivered</button>
+                <button data-filter="completed" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Completed</button>
+                <button data-filter="cancelled" class="filter-btn px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Cancelled</button>
+            </div>
+        </div>
+
+        <!-- Orders list -->
+        <div id="ordersList" class="space-y-4"></div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="hidden text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <p class="text-sm text-gray-500">No orders in this category yet.</p>
+        </div>
+    </main>
+
+    <!-- Order Detail Modal -->
+    <div id="orderModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 px-4 py-8 overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-5 my-auto">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs text-gray-400" id="modalOrderId">Order #—</p>
+                    <h3 class="text-base font-bold text-gray-900" id="modalTitle">Service title</h3>
+                </div>
+                <button type="button" id="closeModal" aria-label="Close" class="text-gray-400 hover:text-gray-700 text-lg leading-none">&times;</button>
+            </div>
+
+            <div id="modalAlert" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+            <!-- Timeline -->
+            <div class="flex items-center justify-between text-[11px] text-gray-500" id="modalTimeline">
+                <!-- filled by JS -->
+            </div>
+
+            <!-- Info grid -->
+            <div class="grid grid-cols-2 gap-3 text-sm bg-gray-50 rounded-xl p-4">
+                <div>
+                    <p class="text-[11px] text-gray-500">Seller / Buyer</p>
+                    <p class="font-semibold text-gray-900" id="modalParty">—</p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500">Order Amount</p>
+                    <p class="font-semibold text-gray-900" id="modalAmount">Rs. 0</p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500">Escrow Status</p>
+                    <p class="font-semibold" id="modalEscrow">—</p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500">Due Date</p>
+                    <p class="font-semibold text-gray-900" id="modalDue">—</p>
+                </div>
+            </div>
+
+            <!-- Actions (shown conditionally per status) -->
+            <div class="flex flex-wrap gap-2" id="modalActions"></div>
+        </div>
     </div>
-  </header>
 
-  <main class="max-w-3xl mx-auto px-4 py-10">
-    <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">My Profile</h1>
-      <p class="text-sm text-gray-500 mb-6">Update your public profile and contact details.</p>
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { watchMyOrders, orderAction } from "./js/data.js";
+import { esc, money, shortId, STATUS_META, ESCROW_META, roleIn, availableActions } from "./js/ledger.js";
 
-      <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border mb-6"></div>
+bindLogout();
 
-      <form id="profileForm" class="space-y-5">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Full name</label>
-          <input id="fullName" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Tagline</label>
-          <input id="tagline" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Short description" />
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
-            <input id="phone" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="03XX1234567" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">City</label>
-            <input id="city" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Lahore" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Skills</label>
-          <input id="skills" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Web Design, SEO, React" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Bio</label>
-          <textarea id="bio" rows="5" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Tell buyers about yourself"></textarea>
-        </div>
-        <button type="submit" id="saveBtn" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-md transition">Save profile</button>
-      </form>
-    </div>
-  </main>
+const $ = (id) => document.getElementById(id);
+const steps = ["pending", "in_progress", "delivered", "completed"];
+const stepLabels = { pending: "Placed", in_progress: "In Progress", delivered: "Delivered", completed: "Completed" };
 
-  <script type="module">
-    import { requireLogin } from './js/session.js';
-    import { getMyProfile, updateMyProfile } from './js/data.js';
+const actionUi = {
+    release:  { label: "Release Payment",   cls: "bg-emerald-700 hover:bg-emerald-800 text-white",
+                confirm: "Release escrow payment to the seller? This confirms you're satisfied with the delivery.",
+                done: "Payment released. Order marked as completed." },
+    revision: { label: "Request Revision",  cls: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+                done: "Revision requested. The seller can see the order is back in progress." },
+    cancel:   { label: "Cancel Order",      cls: "border border-red-200 text-red-600 hover:bg-red-50",
+                confirm: "Cancel this order? Use this only if you have NOT sent the deposit yet.",
+                done: "Order cancelled." },
+    deliver:  { label: "Mark as Delivered", cls: "bg-emerald-700 hover:bg-emerald-800 text-white",
+                confirm: "Mark this order as delivered? The buyer will be asked to review it.",
+                done: "Marked as delivered. Waiting for the buyer to review." },
+    dispute:  { label: "Open Dispute",      cls: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+                done: "Dispute opened. Our support team will review this order." }
+};
 
-    const form = document.getElementById('profileForm');
-    const alertBox = document.getElementById('alertBox');
-    const saveBtn = document.getElementById('saveBtn');
+let me = null;
+let orders = [];
+let currentFilter = "all";
+let activeOrderId = null;
+let deepLinkHandled = false;
 
-    function showAlert(type, message) {
-      const styles = type === 'success'
-        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-        : 'bg-red-50 border-red-200 text-red-800';
-      alertBox.className = 'p-3 rounded-lg text-xs font-medium border block ' + styles;
-      alertBox.textContent = message;
+function showAlert(msg) {
+    const box = $("alertBox");
+    box.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+    box.textContent = msg;
+}
+
+function partyLabel(o) {
+    return roleIn(o, me.uid) === "seller" ? "Buyer: " + o.buyerName : "Seller: " + o.sellerName;
+}
+
+function matchesFilter(o) {
+    if (currentFilter === "all") return true;
+    if (currentFilter === "active") return o.status === "pending" || o.status === "in_progress";
+    return o.status === currentFilter;
+}
+
+function renderOrders() {
+    const list = $("ordersList");
+    const empty = $("emptyState");
+    const filtered = orders.filter(matchesFilter);
+
+    if (filtered.length === 0) {
+        list.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+    }
+    empty.classList.add("hidden");
+
+    list.innerHTML = filtered.map((o) => {
+        const s = STATUS_META[o.status] || STATUS_META.pending;
+        const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
+        return `
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:shadow-md transition">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs text-gray-400">#${esc(shortId(o.id))}</span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${s.badge}">${esc(s.label)}</span>
+                    ${o.disputed && o.disputeStatus === "open" ? '<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200">Dispute</span>' : ""}
+                </div>
+                <h3 class="font-semibold text-gray-900 text-sm mt-1 truncate">${esc(o.title)}</h3>
+                <p class="text-xs text-gray-500 mt-0.5">${esc(partyLabel(o))} &middot; Due ${esc(o.due)}</p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="font-bold text-gray-900 text-sm">${money(o.amount)}</p>
+                <p class="text-[11px] ${e.color} font-medium">${esc(e.label)}</p>
+            </div>
+            <button data-id="${esc(o.id)}" class="viewOrderBtn shrink-0 px-4 py-2 text-xs font-semibold rounded-lg border border-emerald-700 text-emerald-700 hover:bg-emerald-50 transition">
+                View Details
+            </button>
+        </div>`;
+    }).join("");
+}
+
+function renderTimeline(status) {
+    const cancelled = status === "cancelled";
+    const idx = cancelled ? -1 : steps.indexOf(status);
+    return steps.map((step, i) => {
+        const done = !cancelled && i <= idx;
+        const dotColor = done ? "bg-emerald-600" : "bg-gray-200";
+        const textColor = done ? "text-emerald-700 font-semibold" : "text-gray-400";
+        const line = i < steps.length - 1
+            ? `<div class="flex-1 h-0.5 ${i < idx ? "bg-emerald-600" : "bg-gray-200"} mx-1"></div>`
+            : "";
+        return `
+            <div class="flex items-center flex-1">
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-2.5 h-2.5 rounded-full ${dotColor}"></div>
+                    <span class="${textColor}">${stepLabels[step]}</span>
+                </div>
+                ${line}
+            </div>`;
+    }).join("") + (cancelled ? `<span class="text-red-600 font-semibold ml-2">Cancelled</span>` : "");
+}
+
+function renderActions(o) {
+    const buttons = availableActions(o, me.uid, false).map((a) =>
+        `<button data-action="${a}" class="actionBtn px-4 py-2 text-xs font-semibold rounded-lg transition ${actionUi[a].cls}">${actionUi[a].label}</button>`
+    );
+    if (o.disputed && o.disputeStatus === "open") {
+        buttons.push(`<span class="px-3 py-2 text-xs font-semibold text-red-700">Dispute open — support is reviewing this order.</span>`);
+    }
+    const other = roleIn(o, me.uid) === "seller" ? "Buyer" : "Seller";
+    buttons.push(`<a href="messages.html?order=${encodeURIComponent(o.id)}" class="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Message ${other}</a>`);
+    return buttons.join("");
+}
+
+function fillModal(o) {
+    const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
+    $("modalOrderId").textContent = "Order #" + shortId(o.id);
+    $("modalTitle").textContent = o.title;
+    $("modalParty").textContent = partyLabel(o);
+    $("modalAmount").textContent = money(o.amount);
+    $("modalDue").textContent = o.due;
+    $("modalEscrow").textContent = e.label;
+    $("modalEscrow").className = "font-semibold " + e.color;
+    $("modalTimeline").innerHTML = renderTimeline(o.status);
+    $("modalActions").innerHTML = renderActions(o);
+}
+
+function showModalAlert(type, msg) {
+    const box = $("modalAlert");
+    const styles = type === "success"
+        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+        : "bg-red-50 border-red-200 text-red-800";
+    box.className = "p-3 rounded-lg text-xs font-medium border block " + styles;
+    box.textContent = msg;
+}
+
+function openOrderModal(id) {
+    const o = orders.find((x) => x.id === id);
+    if (!o) return;
+    activeOrderId = id;
+    $("modalAlert").className = "hidden";
+    fillModal(o);
+    const modal = $("orderModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function closeOrderModal() {
+    const modal = $("orderModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    activeOrderId = null;
+}
+
+async function runAction(action) {
+    const o = orders.find((x) => x.id === activeOrderId);
+    if (!o || !actionUi[action]) return;
+    if (actionUi[action].confirm && !confirm(actionUi[action].confirm)) return;
+
+    let extra = {};
+    if (action === "dispute") {
+        const reason = prompt("Describe the problem (at least 5 characters):");
+        if (reason === null) return;
+        if (reason.trim().length < 5) {
+            showModalAlert("error", "Please describe the problem in at least 5 characters.");
+            return;
+        }
+        extra = { reason: reason.trim().slice(0, 500), by: me.uid };
     }
 
-    requireLogin().then(async ({ user }) => {
-      const profile = await getMyProfile(user);
-      document.getElementById('fullName').value = profile.fullName || '';
-      document.getElementById('tagline').value = profile.tagline || '';
-      document.getElementById('phone').value = profile.phone || '';
-      document.getElementById('city').value = profile.city || '';
-      document.getElementById('skills').value = Array.isArray(profile.skills) ? profile.skills.join(', ') : (profile.skills || '');
-      document.getElementById('bio').value = profile.bio || '';
+    try {
+        await orderAction(o.id, action, extra);
+        showModalAlert("success", actionUi[action].done);
+    } catch (err) {
+        showModalAlert("error", "Could not update the order. Please try again.");
+    }
+}
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+$("ordersList").addEventListener("click", (e) => {
+    const btn = e.target.closest(".viewOrderBtn");
+    if (btn) openOrderModal(btn.dataset.id);
+});
 
-        try {
-          await updateMyProfile(user, {
-            fullName: document.getElementById('fullName').value.trim(),
-            tagline: document.getElementById('tagline').value.trim(),
-            phone: document.getElementById('phone').value.trim(),
-            city: document.getElementById('city').value.trim(),
-            skills: document.getElementById('skills').value.split(',').map((s) => s.trim()).filter(Boolean),
-            bio: document.getElementById('bio').value.trim()
-          });
-          showAlert('success', 'Profile updated successfully.');
-        } catch (err) {
-          showAlert('error', err?.message || 'Could not save profile.');
-        } finally {
-          saveBtn.disabled = false;
-          saveBtn.textContent = 'Save profile';
-        }
-      });
+$("modalActions").addEventListener("click", (e) => {
+    const btn = e.target.closest(".actionBtn");
+    if (btn) runAction(btn.dataset.action);
+});
+
+$("filterTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll(".filter-btn").forEach((b) => {
+        b.classList.remove("bg-emerald-700", "text-white");
+        b.classList.add("text-gray-600");
     });
-  </script>
+    btn.classList.add("bg-emerald-700", "text-white");
+    btn.classList.remove("text-gray-600");
+    renderOrders();
+});
+
+$("closeModal").addEventListener("click", closeOrderModal);
+$("orderModal").addEventListener("click", (e) => { if (e.target.id === "orderModal") closeOrderModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && activeOrderId) closeOrderModal(); });
+
+requireLogin().then((res) => {
+    me = res.user;
+    watchMyOrders(me.uid, (data) => {
+        orders = data;
+        renderOrders();
+
+        if (activeOrderId) {
+            const current = orders.find((x) => x.id === activeOrderId);
+            if (current) fillModal(current); else closeOrderModal();
+        }
+        if (!deepLinkHandled) {
+            deepLinkHandled = true;
+            const wanted = new URLSearchParams(window.location.search).get("order");
+            if (wanted) openOrderModal(wanted);
+        }
+    }, () => showAlert("Could not load your orders. Check your internet connection and try again."));
+});
+    </script>
 </body>
 </html>
