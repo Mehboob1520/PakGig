@@ -26,6 +26,11 @@
             <button id="btnSeller" onclick="setRole('seller')" class="py-2.5 rounded-lg text-gray-600 hover:text-emerald-700 transition">Work as Freelancer</button>
         </div>
 
+        <!-- KYC notice -->
+        <div class="p-3 rounded-lg text-[11px] bg-amber-50 border border-amber-200 text-amber-900">
+            Account banane ke baad aap ko apni shanakhti tasdeeq (KYC) mukammal karni hogi: CNIC ki dono taraf ki tasveer aur aik selfie. Is ke baghair orders, gigs aur withdrawals istemal nahi ho saktay.
+        </div>
+
         <!-- Success/Error Alert -->
         <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
 
@@ -131,8 +136,9 @@
                 return;
             }
 
-            showAlert("success", "Welcome " + name + "! Account created. Redirecting...");
-            setTimeout(() => { window.location.href = "Services.html"; }, 1200);
+            // KYC is mandatory, so new users go straight to verification.
+            showAlert("success", "Welcome " + name + "! Account created. Ab apni KYC mukammal karein...");
+            setTimeout(() => { window.location.href = "kyc.html"; }, 1200);
         });
     </script>
 </body>
