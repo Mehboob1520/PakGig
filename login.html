@@ -81,7 +81,7 @@
             loginBtn.textContent = "Authenticating...";
             alertBox.className = "hidden";
 
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email: emailInput.value.trim(),
                 password: passwordInput.value
             });
@@ -93,8 +93,20 @@
                 return;
             }
 
+            // KYC is mandatory: anyone (except admins) without an approved
+            // KYC goes straight to the verification page.
+            let next = "Services.html";
+            try {
+                const { data: profile } = await supabase
+                    .from("profiles").select("role, kyc_status")
+                    .eq("id", data.user.id).single();
+                if (profile && profile.role !== "admin" && profile.kyc_status !== "approved") {
+                    next = "kyc.html";
+                }
+            } catch (err) { /* fall back to Services.html; pages gate KYC themselves */ }
+
             showAlert("success", "Logged in successfully! Redirecting...");
-            setTimeout(() => { window.location.href = "Services.html"; }, 600);
+            setTimeout(() => { window.location.href = next; }, 600);
         });
 
         document.getElementById("forgotBtn").addEventListener("click", async () => {
