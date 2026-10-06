@@ -93,6 +93,9 @@
                 </div>
             </div>
 
+            <!-- Fee breakdown (shown to the seller only) -->
+            <p id="modalFee" class="hidden text-[11px] text-gray-600 bg-emerald-50 border border-emerald-100 rounded-lg p-3"></p>
+
             <!-- Auto-release note (shown only for delivered orders) -->
             <p id="modalAutoRelease" class="hidden text-[11px] text-gray-500 bg-amber-50 border border-amber-100 rounded-lg p-3"></p>
 
@@ -104,7 +107,7 @@
     <script type="module">
 import { requireLogin, bindLogout } from "./js/session.js";
 import { watchMyOrders, orderAction } from "./js/data.js";
-import { esc, money, shortId, STATUS_META, ESCROW_META, roleIn, availableActions } from "./js/ledger.js";
+import { esc, money, shortId, STATUS_META, ESCROW_META, roleIn, availableActions, feeFor, payoutFor } from "./js/ledger.js";
 
 bindLogout();
 
@@ -233,6 +236,17 @@ function fillAutoReleaseNote(o) {
     }
 }
 
+// Sellers see exactly how the 8% platform fee is taken from this order.
+function fillFeeNote(o) {
+    const box = $("modalFee");
+    if (roleIn(o, me.uid) === "seller" && o.escrow !== "refunded" && o.status !== "cancelled") {
+        box.textContent = "PakGig fee (8%): " + money(feeFor(o.amount)) + "  ·  You receive: " + money(payoutFor(o.amount));
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
 function fillModal(o) {
     const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
     $("modalOrderId").textContent = "Order #" + shortId(o.id);
@@ -243,6 +257,7 @@ function fillModal(o) {
     $("modalEscrow").textContent = e.label;
     $("modalEscrow").className = "font-semibold " + e.color;
     $("modalTimeline").innerHTML = renderTimeline(o.status);
+    fillFeeNote(o);
     fillAutoReleaseNote(o);
     $("modalActions").innerHTML = renderActions(o);
 }
