@@ -57,6 +57,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Price (Rs.)</label>
                         <input type="number" id="price" required min="100" max="10000000" class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Minimum Rs. 100">
+                        <p id="feeHint" class="text-[11px] text-gray-500 mt-1">PakGig takes an 8% platform fee from every order.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Delivery time (days)</label>
@@ -75,6 +76,7 @@
     <script type="module">
 import { requireLogin, bindLogout } from "./js/session.js";
 import { getMyProfile, createGig } from "./js/data.js";
+import { money, feeFor, payoutFor } from "./js/ledger.js";
 
 bindLogout();
 
@@ -95,8 +97,17 @@ function friendlyGigError(err) {
     if (m.includes("sellers_only")) return "Only seller accounts can create gigs.";
     if (m.includes("account_suspended")) return "Your account is suspended, so you can't create gigs.";
     if (m.includes("not_authenticated")) return "Please log in again.";
+    if (m.includes("kyc_required")) return "Complete your KYC first (kyc.html), then publish your gig.";
     return "Could not publish your gig. Check the details and try again.";
 }
+
+// Live preview of the 8% fee for the price the seller types.
+$("price").addEventListener("input", () => {
+    const p = Number($("price").value);
+    $("feeHint").textContent = p > 0
+        ? "PakGig fee (8%): " + money(feeFor(p)) + "  ·  You receive: " + money(payoutFor(p))
+        : "PakGig takes an 8% platform fee from every order.";
+});
 
 requireLogin().then(async (res) => {
     let profile = { role: "buyer" };
