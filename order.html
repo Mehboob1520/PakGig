@@ -93,6 +93,9 @@
                 </div>
             </div>
 
+            <!-- Auto-release note (shown only for delivered orders) -->
+            <p id="modalAutoRelease" class="hidden text-[11px] text-gray-500 bg-amber-50 border border-amber-100 rounded-lg p-3"></p>
+
             <!-- Actions (shown conditionally per status) -->
             <div class="flex flex-wrap gap-2" id="modalActions"></div>
         </div>
@@ -119,8 +122,8 @@ const actionUi = {
                 confirm: "Cancel this order? Use this only if you have NOT sent the deposit yet.",
                 done: "Order cancelled." },
     deliver:  { label: "Mark as Delivered", cls: "bg-emerald-700 hover:bg-emerald-800 text-white",
-                confirm: "Mark this order as delivered? The buyer will be asked to review it.",
-                done: "Marked as delivered. Waiting for the buyer to review." },
+                confirm: "Mark this order as delivered? The buyer will be asked to review it. If the buyer does not respond within 7 days, the payment is released to you automatically.",
+                done: "Marked as delivered. The buyer has 7 days to review; after that the payment is released to you automatically." },
     dispute:  { label: "Open Dispute",      cls: "border border-gray-300 text-gray-700 hover:bg-gray-50",
                 done: "Dispute opened. Our support team will review this order." }
 };
@@ -217,6 +220,19 @@ function renderActions(o) {
     return buttons.join("");
 }
 
+function fillAutoReleaseNote(o) {
+    const box = $("modalAutoRelease");
+    const open = o.disputed && o.disputeStatus === "open";
+    if (o.status === "delivered" && o.escrow === "held" && !open) {
+        box.textContent = roleIn(o, me.uid) === "buyer"
+            ? "Please review the delivery. If you do not release the payment or request a revision within 7 days of delivery, the payment is released to the seller automatically."
+            : "The buyer has 7 days from delivery to review. After that, the payment is released to your wallet automatically.";
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
 function fillModal(o) {
     const e = ESCROW_META[o.escrow] || ESCROW_META.awaiting;
     $("modalOrderId").textContent = "Order #" + shortId(o.id);
@@ -227,6 +243,7 @@ function fillModal(o) {
     $("modalEscrow").textContent = e.label;
     $("modalEscrow").className = "font-semibold " + e.color;
     $("modalTimeline").innerHTML = renderTimeline(o.status);
+    fillAutoReleaseNote(o);
     $("modalActions").innerHTML = renderActions(o);
 }
 
