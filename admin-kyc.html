@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PakGig Admin - KYC Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span> <span class="text-xs font-semibold text-gray-400">Admin</span></a>
+            <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
+                <a href="admin.html" class="hover:text-emerald-700">Admin Panel</a>
+                <a href="admin-kyc.html" class="text-emerald-700">KYC Review</a>
+                <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">KYC Review</h1>
+                <p class="text-xs text-gray-500 mt-1">CNIC aur selfie ka mawazna karein. Photos sirf 10 minute ke temporary link se khulti hain.</p>
+            </div>
+            <div class="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 text-xs font-semibold" id="tabs">
+                <button data-s="pending" class="tab px-3 py-1.5 rounded-md bg-emerald-700 text-white">Pending</button>
+                <button data-s="approved" class="tab px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Approved</button>
+                <button data-s="rejected" class="tab px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50">Rejected</button>
+            </div>
+        </div>
+
+        <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+        <div id="list" class="space-y-4"></div>
+        <div id="empty" class="hidden text-center py-16 bg-white rounded-2xl border border-gray-100 text-sm text-gray-500">Is category mein koi request nahi.</div>
+    </main>
+
+    <script type="module">
+import { requireLogin, bindLogout } from "./js/session.js";
+import { listKyc, signedKycUrls, reviewKyc, friendlyKycError } from "./js/kyc.js";
+
+bindLogout();
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let current = "pending";
+let items = [];
+
+function alertBox(type, msg) {
+    const b = $("alertBox");
+    b.className = "p-3 rounded-lg text-xs font-medium border block " + (type === "error" ? "bg-red-50 border-red-200 text-red-800" : "bg-emerald-50 border-emerald-200 text-emerald-800");
+    b.textContent = msg;
+}
+
+function fmtCnic(c) { return c.length === 13 ? c.slice(0, 5) + "-" + c.slice(5, 12) + "-" + c.slice(12) : c; }
+
+function card(s) {
+    const p = s.profile || {};
+    const when = new Date(s.created_at).toLocaleString();
+    const actions = s.status === "pending"
+        ? `<div class="flex flex-wrap gap-2 pt-2">
+             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Photos dekhein</button>
+             <button data-act="approve" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800">Approve</button>
+             <button data-act="reject" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Reject</button>
+           </div>`
+        : `<div class="flex flex-wrap gap-2 pt-2">
+             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Photos dekhein</button>
+             ${s.status === "rejected" ? `<span class="text-xs text-red-700 py-2">Wajah: ${esc(s.reject_reason)}</span>` : ""}
+           </div>`;
+    return `
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-2" id="card-${esc(s.id)}">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <h3 class="font-semibold text-gray-900 text-sm">${esc(s.legal_name)}</h3>
+            <span class="text-[11px] text-gray-400">${esc(p.email || "")} &middot; ${esc(p.role || "")}</span>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-2 text-xs text-gray-600">
+            <p>CNIC: <span class="font-semibold text-gray-900">${esc(fmtCnic(s.cnic_number))}</span></p>
+            <p>DOB: <span class="font-semibold text-gray-900">${esc(s.date_of_birth)}</span></p>
+            <p>Jama hui: <span class="font-semibold text-gray-900">${esc(when)}</span></p>
+        </div>
+        <p class="text-[11px] text-gray-400">Account ka naam: ${esc(p.full_name || "-")}</p>
+        <div class="photos hidden grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2"></div>
+        ${actions}
+    </div>`;
+}
+
+function render() {
+    $("list").innerHTML = items.map(card).join("");
+    $("empty").classList.toggle("hidden", items.length > 0);
+}
+
+async function load() {
+    try {
+        items = await listKyc(current);
+        render();
+    } catch (err) {
+        alertBox("error", "List load nahi ho saki.");
+    }
+}
+
+async function showPhotos(id) {
+    const s = items.find((x) => x.id === id);
+    const holder = document.querySelector(`#card-${CSS.escape(id)} .photos`);
+    if (!s || !holder) return;
+    try {
+        const u = await signedKycUrls(s);
+        const one = (label, url) => `<div><p class="text-[11px] text-gray-500 mb-1">${label}</p><a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="${label}" class="rounded-lg border border-gray-200 w-full object-contain max-h-64 bg-gray-50"></a></div>`;
+        holder.innerHTML = one("CNIC agla hissa", u.front) + one("CNIC pichla hissa", u.back) + one("Selfie", u.selfie);
+        holder.classList.remove("hidden");
+    } catch (err) {
+        alertBox("error", "Photos load nahi ho sakin.");
+    }
+}
+
+async function decide(id, decision) {
+    let reason = "";
+    if (decision === "reject") {
+        const r = prompt("Reject karne ki wajah likhein (user ko nazar aayegi):");
+        if (r === null) return;
+        reason = r.trim();
+        if (reason.length < 5) return alertBox("error", "Wajah kam az kam 5 harf ki likhein.");
+    } else if (!confirm("Is user ki KYC approve karein? Pehle photos aur CNIC number achi tarah check kar lein.")) {
+        return;
+    }
+    try {
+        await reviewKyc(id, decision, reason);
+        alertBox("success", decision === "approve" ? "KYC approve ho gayi." : "KYC reject ho gayi.");
+        await load();
+    } catch (err) {
+        alertBox("error", friendlyKycError(err));
+    }
+}
+
+$("list").addEventListener("click", (e) => {
+    const b = e.target.closest(".act");
+    if (!b) return;
+    if (b.dataset.act === "photos") showPhotos(b.dataset.id);
+    else decide(b.dataset.id, b.dataset.act);
+});
+
+$("tabs").addEventListener("click", (e) => {
+    const b = e.target.closest(".tab");
+    if (!b) return;
+    current = b.dataset.s;
+    document.querySelectorAll(".tab").forEach((t) => { t.classList.remove("bg-emerald-700", "text-white"); t.classList.add("text-gray-600"); });
+    b.classList.add("bg-emerald-700", "text-white");
+    b.classList.remove("text-gray-600");
+    load();
+});
+
+requireLogin({ adminOnly: true }).then(load);
+    </script>
+</body>
+</html>
