@@ -141,6 +141,11 @@
                         <span id="verifiedBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
                     </div>
 
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">KYC</span>
+                        <a href="kyc.html" id="kycBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200">—</a>
+                    </div>
+
                     <hr class="border-gray-100">
 
                     <button type="button" id="changePwBtn" class="block text-xs font-semibold text-emerald-700 hover:underline">Change Password →</button>
@@ -154,6 +159,7 @@
         import { requireLogin, bindLogout, friendlyAuthError } from "./js/session.js";
         import { supabase } from "./js/supabaseClient.js";
         import { getMyProfile, updateMyProfile, deleteMyAccount, watchMyOrders } from "./js/data.js";
+        import { getMyKyc } from "./js/kyc.js";
         import { money, sellerTotals, buyerHeld } from "./js/ledger.js";
 
         bindLogout();
@@ -196,6 +202,22 @@
                 badge.textContent = "Verified";
                 badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
             }
+        }
+
+        async function loadKyc() {
+            try {
+                const k = await getMyKyc(currentUser.id);
+                const badge = $("kycBadge");
+                const looks = {
+                    approved: ["Verified", "bg-emerald-50 text-emerald-700 border-emerald-200"],
+                    pending:  ["In review", "bg-amber-50 text-amber-700 border-amber-200"],
+                    rejected: ["Rejected - fix", "bg-red-50 text-red-700 border-red-200"],
+                    none:     ["Required - start", "bg-red-50 text-red-700 border-red-200"]
+                };
+                const key = k.role === "admin" ? "approved" : (looks[k.status] ? k.status : "none");
+                badge.textContent = looks[key][0];
+                badge.className = "text-xs font-semibold px-2 py-0.5 rounded-full border " + looks[key][1];
+            } catch (err) { /* leave the dash */ }
         }
 
         async function loadProfile() {
@@ -285,9 +307,11 @@
             $("statEscrow").textContent = money(held);
         }
 
-        requireLogin().then(async (res) => {
+        // skipKyc: the profile page stays open so people can fix their details before KYC is approved.
+        requireLogin({ skipKyc: true }).then(async (res) => {
             currentUser = res.user;
             await loadProfile();
+            loadKyc();
             watchMyOrders(currentUser.uid, renderStats, () => {});
         });
     </script>
