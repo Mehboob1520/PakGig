@@ -7,7 +7,13 @@ const BUCKET = "kyc-docs";
 const MAX_BYTES = 5 * 1024 * 1024;
 const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+// Errors we raise ourselves (file checks) already carry a readable message.
+function friendly(msg) {
+    return Object.assign(new Error(msg), { friendly: true });
+}
+
 export function friendlyKycError(err) {
+    if (err && err.friendly) return err.message;
     const m = ((err && err.message) || String(err || "")).toLowerCase();
     if (m.includes("already_submitted")) return "Aap ki KYC pehle hi jama ho chuki hai.";
     if (m.includes("cnic_in_use")) return "Ye CNIC number pehle se kisi aur account par istemal ho raha hai.";
@@ -35,9 +41,9 @@ function extOf(file) {
 }
 
 function checkFile(file, label) {
-    if (!file) throw new Error(label + " select karein.");
-    if (!OK_TYPES.includes(file.type)) throw new Error(label + ": sirf JPG, PNG ya WEBP tasveer chalegi.");
-    if (file.size > MAX_BYTES) throw new Error(label + ": tasveer 5 MB se choti honi chahiye.");
+    if (!file) throw friendly(label + " select karein.");
+    if (!OK_TYPES.includes(file.type)) throw friendly(label + ": sirf JPG, PNG ya WEBP tasveer chalegi.");
+    if (file.size > MAX_BYTES) throw friendly(label + ": tasveer 5 MB se choti honi chahiye.");
 }
 
 async function upload(userId, kind, file) {
