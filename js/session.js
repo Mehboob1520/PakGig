@@ -13,6 +13,7 @@ export function friendlyAuthError(message) {
     if (m.includes("email not confirmed")) return "Pehle apna email verify karein.";
     if (m.includes("rate limit")) return "Bohot zyada koshishein ho gayi hain, thodi dair baad try karein.";
     if (m.includes("has_history")) return "Ye account delete nahi ho sakta kyunke iske sath orders/withdrawals ka record maujood hai.";
+    if (m.includes("kyc_required")) return "Pehle apni KYC (shanakhti tasdeeq) mukammal karein: kyc.html";
     return message || "Kuch masla ho gaya, dobara koshish karein.";
 }
 
@@ -36,6 +37,9 @@ export async function whenAuthReady() {
 // For pages that require a logged-in user: redirects to login.html (or
 // index.html, if adminOnly and the user isn't an admin) and otherwise
 // resolves with { user }.
+// KYC: every buyer and seller must have an approved KYC. Pages that call
+// requireLogin() are sent to kyc.html until it is approved (admins are
+// exempt). Only kyc.html and profile.html pass { skipKyc: true }.
 export async function requireLogin(opts = {}) {
     const { data } = await supabase.auth.getSession();
     const session = data.session;
@@ -44,10 +48,18 @@ export async function requireLogin(opts = {}) {
         return new Promise(() => {}); // page is navigating away
     }
     const user = withAliases(session.user);
+    const { data: profile } = await supabase
+        .from("profiles").select("role, kyc_status").eq("id", user.id).single();
     if (opts.adminOnly) {
-        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
         if (!profile || profile.role !== "admin") {
             window.location.href = "index.html";
+            return new Promise(() => {});
+        }
+    }
+    if (!opts.skipKyc) {
+        const isAdmin = profile && profile.role === "admin";
+        if (!isAdmin && (!profile || profile.kyc_status !== "approved")) {
+            window.location.href = "kyc.html";
             return new Promise(() => {});
         }
     }
