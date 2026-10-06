@@ -316,8 +316,9 @@ form.addEventListener("submit", async (e) => {
 // ---------- load ----------
 listGigs().then((data) => { gigs = data; renderGigs(); })
     .catch(() => {
-        $("servicesGrid").innerHTML = `<p class="col-span-full text-center text-sm text-red-600 py-12">Could not load services. Check your connection and that the Firestore rules are published.</p>`;
+        $("servicesGrid").innerHTML = `<p class="col-span-full text-center text-sm text-red-600 py-12">Could not load services. Check your connection and try again.</p>`;
     });
     </script>
+    <script type="module" src="./js/online-pay.js"></script>
 </body>
 </html>
