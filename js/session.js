@@ -6,15 +6,15 @@ import { supabase } from "./supabaseClient.js";
 // Turns a raw Supabase auth error message into a friendly line.
 export function friendlyAuthError(message) {
     const m = (message || "").toLowerCase();
-    if (m.includes("invalid login credentials")) return "Email ya password ghalat hai.";
-    if (m.includes("user already registered")) return "Is email se pehle hi account bana hua hai.";
-    if (m.includes("password should be at least")) return "Password kam az kam 6 characters ka hona chahiye.";
-    if (m.includes("invalid email") || m.includes("unable to validate email")) return "Email address theek nahi hai.";
-    if (m.includes("email not confirmed")) return "Pehle apna email verify karein.";
-    if (m.includes("rate limit")) return "Bohot zyada koshishein ho gayi hain, thodi dair baad try karein.";
-    if (m.includes("has_history")) return "Ye account delete nahi ho sakta kyunke iske sath orders/withdrawals ka record maujood hai.";
-    if (m.includes("kyc_required")) return "Pehle apni KYC (shanakhti tasdeeq) mukammal karein: kyc.html";
-    return message || "Kuch masla ho gaya, dobara koshish karein.";
+    if (m.includes("invalid login credentials")) return "Incorrect email or password.";
+    if (m.includes("user already registered")) return "An account with this email already exists.";
+    if (m.includes("password should be at least")) return "Password must be at least 6 characters long.";
+    if (m.includes("invalid email") || m.includes("unable to validate email")) return "That email address doesn't look valid.";
+    if (m.includes("email not confirmed")) return "Please verify your email first.";
+    if (m.includes("rate limit")) return "Too many attempts. Please try again in a little while.";
+    if (m.includes("has_history")) return "This account can't be deleted because it has order or withdrawal records.";
+    if (m.includes("kyc_required")) return "Please complete your identity verification (KYC) first.";
+    return message || "Something went wrong. Please try again.";
 }
 
 // Supabase users have `id`; the pages were written using `uid` and

@@ -15,17 +15,17 @@ function friendly(msg) {
 export function friendlyKycError(err) {
     if (err && err.friendly) return err.message;
     const m = ((err && err.message) || String(err || "")).toLowerCase();
-    if (m.includes("already_submitted")) return "Aap ki KYC pehle hi jama ho chuki hai.";
-    if (m.includes("cnic_in_use")) return "Ye CNIC number pehle se kisi aur account par istemal ho raha hai.";
-    if (m.includes("bad_cnic")) return "CNIC number 13 digits ka hona chahiye.";
-    if (m.includes("bad_name")) return "CNIC par likha hua poora naam likhein.";
-    if (m.includes("under_18")) return "KYC ke liye umar kam az kam 18 saal honi chahiye.";
-    if (m.includes("bad_files") || m.includes("files_missing")) return "Tasveerein theek se upload nahi hui, dobara koshish karein.";
-    if (m.includes("account_suspended")) return "Ye account suspend hai.";
-    if (m.includes("not_needed")) return "Admin account ko KYC ki zaroorat nahi.";
-    if (m.includes("bad_reason")) return "Reject karne ki wajah kam az kam 5 harf ki likhein.";
-    if (m.includes("not_allowed") || m.includes("forbidden")) return "Ye amal is waqt mumkin nahi.";
-    return "Kuch masla ho gaya, dobara koshish karein.";
+    if (m.includes("already_submitted")) return "Your KYC has already been submitted.";
+    if (m.includes("cnic_in_use")) return "This CNIC number is already in use on another account.";
+    if (m.includes("bad_cnic")) return "The CNIC number must be 13 digits.";
+    if (m.includes("bad_name")) return "Enter your full name exactly as written on your CNIC.";
+    if (m.includes("under_18")) return "You must be at least 18 years old to complete KYC.";
+    if (m.includes("bad_files") || m.includes("files_missing")) return "Your photos did not upload correctly. Please try again.";
+    if (m.includes("account_suspended")) return "This account is suspended.";
+    if (m.includes("not_needed")) return "Admin accounts do not need KYC.";
+    if (m.includes("bad_reason")) return "Enter a rejection reason of at least 5 characters.";
+    if (m.includes("not_allowed") || m.includes("forbidden")) return "This action is not allowed right now.";
+    return "Something went wrong. Please try again.";
 }
 
 // Returns { status: 'none'|'pending'|'approved'|'rejected', reason, role }
@@ -41,9 +41,9 @@ function extOf(file) {
 }
 
 function checkFile(file, label) {
-    if (!file) throw friendly(label + " select karein.");
-    if (!OK_TYPES.includes(file.type)) throw friendly(label + ": sirf JPG, PNG ya WEBP tasveer chalegi.");
-    if (file.size > MAX_BYTES) throw friendly(label + ": tasveer 5 MB se choti honi chahiye.");
+    if (!file) throw friendly("Please select an image for: " + label + ".");
+    if (!OK_TYPES.includes(file.type)) throw friendly(label + ": only JPG, PNG or WEBP images are accepted.");
+    if (file.size > MAX_BYTES) throw friendly(label + ": the image must be smaller than 5 MB.");
 }
 
 async function upload(userId, kind, file) {
@@ -55,8 +55,8 @@ async function upload(userId, kind, file) {
 
 // files = { front, back, selfie } (File objects)
 export async function submitKyc(user, { legalName, cnic, dob, files }) {
-    checkFile(files.front, "CNIC ka agla hissa");
-    checkFile(files.back, "CNIC ka pichla hissa");
+    checkFile(files.front, "Front of CNIC");
+    checkFile(files.back, "Back of CNIC");
     checkFile(files.selfie, "Selfie");
     const front = await upload(user.id, "front", files.front);
     const back = await upload(user.id, "back", files.back);

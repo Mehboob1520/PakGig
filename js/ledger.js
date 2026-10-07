@@ -32,7 +32,7 @@ export const STATUS_META = {
     in_progress: { label: "In Progress", badge: "bg-blue-50 text-blue-700 border-blue-200" },
     delivered:   { label: "Delivered",   badge: "bg-amber-50 text-amber-700 border-amber-200" },
     completed:   { label: "Completed",   badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-    cancelled:   { label: "Cancelled",   badge: "bg-red-50 text-red-700 border-red-200" }
+    cancelled:   { label: "Canceled",    badge: "bg-red-50 text-red-700 border-red-200" }
 };
 
 export const ESCROW_META = {
