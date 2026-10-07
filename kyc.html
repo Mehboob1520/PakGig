@@ -27,7 +27,7 @@
 
         <div>
             <h1 class="text-xl font-bold text-gray-900">Identity Verification (KYC)</h1>
-            <p class="text-xs text-gray-500 mt-1">PakGig par har buyer aur seller ke liye KYC zaroori hai. Is se dono taraf ki hifazat hoti hai.</p>
+            <p class="text-xs text-gray-500 mt-1">Identity verification is required for every buyer and seller on PakGig. It protects both sides of every order.</p>
         </div>
 
         <!-- Status banners -->
@@ -38,7 +38,7 @@
             <div id="formAlert" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1" for="legalName">Poora naam (bilkul CNIC ke mutabiq)</label>
+                <label class="block text-xs font-semibold text-gray-700 mb-1" for="legalName">Full name (exactly as on your CNIC)</label>
                 <input id="legalName" type="text" maxlength="100" autocomplete="name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
             </div>
 
@@ -48,67 +48,67 @@
                     <input id="cnic" type="text" inputmode="numeric" maxlength="15" placeholder="12345-1234567-1" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1" for="dob">Tareekh-e-paidaish</label>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1" for="dob">Date of birth</label>
                     <input id="dob" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600">
                 </div>
             </div>
 
             <div>
-                <p class="text-xs font-semibold text-gray-700 mb-2">Tasveerein upload karein (3 cheezein)</p>
+                <p class="text-xs font-semibold text-gray-700 mb-2">Upload your photos (3 required)</p>
                 <div class="grid sm:grid-cols-3 gap-4">
 
                     <div>
-                        <span class="block text-xs font-semibold text-gray-700 mb-1">1. CNIC ka agla hissa</span>
+                        <span class="block text-xs font-semibold text-gray-700 mb-1">1. Front of CNIC</span>
                         <label for="front" class="flex flex-col items-center justify-center text-center gap-1 min-h-[160px] px-3 py-4 rounded-xl border-2 border-dashed border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 cursor-pointer transition focus-within:ring-2 focus-within:ring-emerald-600">
                             <input id="front" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
                             <img id="frontPrev" alt="" class="hidden max-h-24 rounded-lg border border-gray-200">
                             <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                            <span id="frontText" class="text-sm font-semibold text-emerald-700 break-all">Tasveer chunein</span>
-                            <span data-hint class="text-[11px] text-gray-500">Yahan click ya tap karein</span>
+                            <span id="frontText" class="text-sm font-semibold text-emerald-700 break-all">Choose an image</span>
+                            <span data-hint class="text-[11px] text-gray-500">Click or tap here</span>
                         </label>
                     </div>
 
                     <div>
-                        <span class="block text-xs font-semibold text-gray-700 mb-1">2. CNIC ka pichla hissa</span>
+                        <span class="block text-xs font-semibold text-gray-700 mb-1">2. Back of CNIC</span>
                         <label for="back" class="flex flex-col items-center justify-center text-center gap-1 min-h-[160px] px-3 py-4 rounded-xl border-2 border-dashed border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 cursor-pointer transition focus-within:ring-2 focus-within:ring-emerald-600">
                             <input id="back" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
                             <img id="backPrev" alt="" class="hidden max-h-24 rounded-lg border border-gray-200">
                             <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                            <span id="backText" class="text-sm font-semibold text-emerald-700 break-all">Tasveer chunein</span>
-                            <span data-hint class="text-[11px] text-gray-500">Yahan click ya tap karein</span>
+                            <span id="backText" class="text-sm font-semibold text-emerald-700 break-all">Choose an image</span>
+                            <span data-hint class="text-[11px] text-gray-500">Click or tap here</span>
                         </label>
                     </div>
 
                     <div>
-                        <span class="block text-xs font-semibold text-gray-700 mb-1">3. Selfie (CNIC haath mein pakad kar)</span>
+                        <span class="block text-xs font-semibold text-gray-700 mb-1">3. Selfie holding your CNIC</span>
                         <label for="selfie" class="flex flex-col items-center justify-center text-center gap-1 min-h-[160px] px-3 py-4 rounded-xl border-2 border-dashed border-emerald-400 bg-emerald-50/50 hover:bg-emerald-50 cursor-pointer transition focus-within:ring-2 focus-within:ring-emerald-600">
                             <input id="selfie" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
                             <img id="selfiePrev" alt="" class="hidden max-h-24 rounded-lg border border-gray-200">
                             <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-                            <span id="selfieText" class="text-sm font-semibold text-emerald-700 break-all">Tasveer chunein</span>
-                            <span data-hint class="text-[11px] text-gray-500">Gallery se chunein ya camera se khinchein</span>
+                            <span id="selfieText" class="text-sm font-semibold text-emerald-700 break-all">Choose an image</span>
+                            <span data-hint class="text-[11px] text-gray-500">Pick from your gallery or take a photo</span>
                         </label>
                     </div>
 
                 </div>
-                <p class="text-[11px] text-gray-500 mt-2">Tasveer chunne ke baad box mein uska preview nazar aayega. Badalne ke liye dobara box par click karein.</p>
+                <p class="text-[11px] text-gray-500 mt-2">After you choose a photo, a preview appears in the box. Click the box again to change it.</p>
             </div>
 
             <ul class="text-[11px] text-gray-500 list-disc pl-4 space-y-1">
-                <li>Tasveerein saaf hon, poora CNIC nazar aaye, koi hissa kata hua na ho.</li>
-                <li>Selfie mein aap ka chehra aur CNIC dono saaf nazar aane chahiye.</li>
-                <li>Sirf JPG, PNG ya WEBP, har tasveer 5 MB se choti.</li>
-                <li>Aap ki tasveerein private rakhi jati hain; sirf PakGig ki review team dekh sakti hai.</li>
-                <li>Aik CNIC sirf aik account par istemal ho sakta hai.</li>
+                <li>Photos must be clear and show the entire CNIC, with no part cut off.</li>
+                <li>Your selfie must clearly show both your face and your CNIC.</li>
+                <li>JPG, PNG or WEBP only, and each image must be under 5 MB.</li>
+                <li>Your photos are kept private; only the PakGig review team can view them.</li>
+                <li>One CNIC can be used on only one account.</li>
             </ul>
 
             <label class="flex items-start gap-2 text-xs text-gray-600">
                 <input id="agree" type="checkbox" class="mt-0.5">
-                <span>Main tasdeeq karta/karti hoon ke ye maloomat meri apni aur durust hain.</span>
+                <span>I confirm that this information is mine and is accurate.</span>
             </label>
 
             <button id="submitBtn" type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold transition disabled:opacity-50">
-                KYC jama karein
+                Submit KYC
             </button>
         </form>
     </main>
@@ -152,7 +152,7 @@ function wireUpload(inputId, imgId, textId) {
     function reset() {
         if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
         img.classList.add("hidden");
-        text.textContent = "Tasveer chunein";
+        text.textContent = "Choose an image";
         hint.textContent = defaultHint;
         card.classList.remove("border-solid", "border-emerald-700", "bg-emerald-50");
         card.classList.add("border-dashed");
@@ -164,13 +164,13 @@ function wireUpload(inputId, imgId, textId) {
         if (!/^image\/(jpeg|png|webp)$/.test(f.type)) {
             input.value = "";
             reset();
-            formAlert("error", "Sirf JPG, PNG ya WEBP tasveer chunein.");
+            formAlert("error", "Only JPG, PNG or WEBP images are allowed.");
             return;
         }
         if (f.size > MAX_BYTES) {
             input.value = "";
             reset();
-            formAlert("error", "Tasveer 5 MB se choti honi chahiye. Choti tasveer chunein.");
+            formAlert("error", "The image must be smaller than 5 MB. Please choose a smaller image.");
             return;
         }
         $("formAlert").className = "hidden";
@@ -179,12 +179,12 @@ function wireUpload(inputId, imgId, textId) {
         img.src = objectUrl;
         img.classList.remove("hidden");
         text.textContent = f.name;
-        hint.textContent = "Tasveer chun li gayi. Badalne ke liye dobara click karein.";
+        hint.textContent = "Photo selected. Click to change it.";
         card.classList.remove("border-dashed");
         card.classList.add("border-solid", "border-emerald-700", "bg-emerald-50");
     });
 
-    // Drag & drop (computer par)
+    // Drag & drop (on a computer)
     card.addEventListener("dragover", (e) => { e.preventDefault(); card.classList.add("bg-emerald-100"); });
     card.addEventListener("dragleave", () => card.classList.remove("bg-emerald-100"));
     card.addEventListener("drop", (e) => {
@@ -203,13 +203,13 @@ let me = null;
 function render(k) {
     $("kycForm").classList.add("hidden");
     if (k.role === "admin" || k.status === "approved") {
-        banner("approved", `<p class="font-semibold">Aap ki KYC mukammal hai.</p><p class="text-xs mt-1">Ab aap PakGig ki tamam sahulatein istemal kar sakte hain.</p><a href="dashboard.html" class="inline-block mt-3 px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold">Dashboard par jayein</a>`);
+        banner("approved", `<p class="font-semibold">Your KYC is complete.</p><p class="text-xs mt-1">You can now use all PakGig features.</p><a href="dashboard.html" class="inline-block mt-3 px-4 py-2 rounded-lg bg-emerald-700 text-white text-xs font-semibold">Go to dashboard</a>`);
     } else if (k.status === "pending") {
-        banner("pending", `<p class="font-semibold">Aap ki KYC review mein hai.</p><p class="text-xs mt-1">Hamari team aap ki maloomat check kar rahi hai. Manzoori ke baad aap orders aur gigs istemal kar sakenge.</p>`);
+        banner("pending", `<p class="font-semibold">Your KYC is under review.</p><p class="text-xs mt-1">Our team is checking your information. Once it is approved, you can use orders and gigs.</p>`);
     } else {
         if (k.status === "rejected") {
             const r = (k.reason || "").replace(/</g, "&lt;");
-            banner("rejected", `<p class="font-semibold">Aap ki KYC manzoor nahi hui.</p><p class="text-xs mt-1">Wajah: ${r}</p><p class="text-xs mt-1">Neeche theek karke dobara jama karein.</p>`);
+            banner("rejected", `<p class="font-semibold">Your KYC was not approved.</p><p class="text-xs mt-1">Reason: ${r}</p><p class="text-xs mt-1">Please correct the issue below and submit again.</p>`);
         } else {
             $("statusBox").className = "hidden";
         }
@@ -230,17 +230,17 @@ $("kycForm").addEventListener("submit", async (e) => {
     const legalName = $("legalName").value.trim();
     const cnic = $("cnic").value.replace(/\D/g, "");
     const dob = $("dob").value;
-    if (legalName.length < 3) return formAlert("error", "CNIC ke mutabiq poora naam likhein.");
-    if (cnic.length !== 13) return formAlert("error", "CNIC number 13 digits ka hona chahiye.");
-    if (!dob) return formAlert("error", "Tareekh-e-paidaish chunein.");
+    if (legalName.length < 3) return formAlert("error", "Enter your full name exactly as it appears on your CNIC.");
+    if (cnic.length !== 13) return formAlert("error", "The CNIC number must be 13 digits.");
+    if (!dob) return formAlert("error", "Select your date of birth.");
     if (!$("front").files[0] || !$("back").files[0] || !$("selfie").files[0]) {
-        return formAlert("error", "Teenon tasveerein chunein: CNIC ka agla hissa, pichla hissa aur selfie.");
+        return formAlert("error", "Please choose all three photos: front of CNIC, back of CNIC and selfie.");
     }
-    if (!$("agree").checked) return formAlert("error", "Pehle tasdeeq ka box tick karein.");
+    if (!$("agree").checked) return formAlert("error", "Please tick the confirmation box first.");
 
     const btn = $("submitBtn");
     btn.disabled = true;
-    btn.textContent = "Jama ho raha hai...";
+    btn.textContent = "Submitting...";
     try {
         await submitKyc(me, {
             legalName, cnic, dob,
@@ -249,9 +249,9 @@ $("kycForm").addEventListener("submit", async (e) => {
         render({ status: "pending", role: "buyer" });
         window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
-        formAlert("error", (err && err.message && !/[_]/.test(err.message) && err.message.includes("select") || (err && err.message && err.message.includes("tasveer"))) ? err.message : friendlyKycError(err));
+        formAlert("error", friendlyKycError(err));
         btn.disabled = false;
-        btn.textContent = "KYC jama karein";
+        btn.textContent = "Submit KYC";
     }
 });
 
@@ -260,7 +260,7 @@ requireLogin({ skipKyc: true }).then(async (res) => {
     try {
         render(await getMyKyc(me.id));
     } catch (err) {
-        banner("rejected", "Maloomat load nahi ho sakin. Internet check karke page dobara kholein.");
+        banner("rejected", "Could not load your information. Check your internet connection and reload the page.");
     }
 });
     </script>

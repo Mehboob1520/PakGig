@@ -27,7 +27,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
                 <h1 class="text-xl font-bold text-gray-900">KYC Review</h1>
-                <p class="text-xs text-gray-500 mt-1">CNIC aur selfie ka mawazna karein. Photos sirf 10 minute ke temporary link se khulti hain.</p>
+                <p class="text-xs text-gray-500 mt-1">Compare the CNIC and selfie photos. Photos open only through temporary 10-minute links.</p>
             </div>
             <div class="flex gap-1 bg-white border border-gray-200 rounded-lg p-1 text-xs font-semibold" id="tabs">
                 <button data-s="pending" class="tab px-3 py-1.5 rounded-md bg-emerald-700 text-white">Pending</button>
@@ -38,7 +38,7 @@
 
         <div id="alertBox" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
         <div id="list" class="space-y-4"></div>
-        <div id="empty" class="hidden text-center py-16 bg-white rounded-2xl border border-gray-100 text-sm text-gray-500">Is category mein koi request nahi.</div>
+        <div id="empty" class="hidden text-center py-16 bg-white rounded-2xl border border-gray-100 text-sm text-gray-500">No requests in this category.</div>
     </main>
 
     <script type="module">
@@ -65,13 +65,13 @@ function card(s) {
     const when = new Date(s.created_at).toLocaleString();
     const actions = s.status === "pending"
         ? `<div class="flex flex-wrap gap-2 pt-2">
-             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Photos dekhein</button>
+             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">View photos</button>
              <button data-act="approve" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800">Approve</button>
              <button data-act="reject" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Reject</button>
            </div>`
         : `<div class="flex flex-wrap gap-2 pt-2">
-             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Photos dekhein</button>
-             ${s.status === "rejected" ? `<span class="text-xs text-red-700 py-2">Wajah: ${esc(s.reject_reason)}</span>` : ""}
+             <button data-act="photos" data-id="${esc(s.id)}" class="act px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">View photos</button>
+             ${s.status === "rejected" ? `<span class="text-xs text-red-700 py-2">Reason: ${esc(s.reject_reason)}</span>` : ""}
            </div>`;
     return `
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-2" id="card-${esc(s.id)}">
@@ -82,9 +82,9 @@ function card(s) {
         <div class="grid sm:grid-cols-3 gap-2 text-xs text-gray-600">
             <p>CNIC: <span class="font-semibold text-gray-900">${esc(fmtCnic(s.cnic_number))}</span></p>
             <p>DOB: <span class="font-semibold text-gray-900">${esc(s.date_of_birth)}</span></p>
-            <p>Jama hui: <span class="font-semibold text-gray-900">${esc(when)}</span></p>
+            <p>Submitted: <span class="font-semibold text-gray-900">${esc(when)}</span></p>
         </div>
-        <p class="text-[11px] text-gray-400">Account ka naam: ${esc(p.full_name || "-")}</p>
+        <p class="text-[11px] text-gray-400">Account name: ${esc(p.full_name || "-")}</p>
         <div class="photos hidden grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2"></div>
         ${actions}
     </div>`;
@@ -100,7 +100,7 @@ async function load() {
         items = await listKyc(current);
         render();
     } catch (err) {
-        alertBox("error", "List load nahi ho saki.");
+        alertBox("error", "Could not load the list.");
     }
 }
 
@@ -111,26 +111,26 @@ async function showPhotos(id) {
     try {
         const u = await signedKycUrls(s);
         const one = (label, url) => `<div><p class="text-[11px] text-gray-500 mb-1">${label}</p><a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="${label}" class="rounded-lg border border-gray-200 w-full object-contain max-h-64 bg-gray-50"></a></div>`;
-        holder.innerHTML = one("CNIC agla hissa", u.front) + one("CNIC pichla hissa", u.back) + one("Selfie", u.selfie);
+        holder.innerHTML = one("Front of CNIC", u.front) + one("Back of CNIC", u.back) + one("Selfie", u.selfie);
         holder.classList.remove("hidden");
     } catch (err) {
-        alertBox("error", "Photos load nahi ho sakin.");
+        alertBox("error", "Could not load the photos.");
     }
 }
 
 async function decide(id, decision) {
     let reason = "";
     if (decision === "reject") {
-        const r = prompt("Reject karne ki wajah likhein (user ko nazar aayegi):");
+        const r = prompt("Enter the reason for rejection (the user will see it):");
         if (r === null) return;
         reason = r.trim();
-        if (reason.length < 5) return alertBox("error", "Wajah kam az kam 5 harf ki likhein.");
-    } else if (!confirm("Is user ki KYC approve karein? Pehle photos aur CNIC number achi tarah check kar lein.")) {
+        if (reason.length < 5) return alertBox("error", "Please enter a reason of at least 5 characters.");
+    } else if (!confirm("Approve this user's KYC? Check the photos and the CNIC number carefully first.")) {
         return;
     }
     try {
         await reviewKyc(id, decision, reason);
-        alertBox("success", decision === "approve" ? "KYC approve ho gayi." : "KYC reject ho gayi.");
+        alertBox("success", decision === "approve" ? "KYC approved." : "KYC rejected.");
         await load();
     } catch (err) {
         alertBox("error", friendlyKycError(err));

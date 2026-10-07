@@ -28,7 +28,7 @@
 
         <!-- KYC notice -->
         <div class="p-3 rounded-lg text-[11px] bg-amber-50 border border-amber-200 text-amber-900">
-            Account banane ke baad aap ko apni shanakhti tasdeeq (KYC) mukammal karni hogi: CNIC ki dono taraf ki tasveer aur aik selfie. Is ke baghair orders, gigs aur withdrawals istemal nahi ho saktay.
+            After you create your account, you must complete identity verification (KYC): photos of the front and back of your CNIC and a selfie. Without it, you can't use orders, gigs or withdrawals.
         </div>
 
         <!-- Success/Error Alert -->
@@ -137,7 +137,7 @@
             }
 
             // KYC is mandatory, so new users go straight to verification.
-            showAlert("success", "Welcome " + name + "! Account created. Ab apni KYC mukammal karein...");
+            showAlert("success", "Welcome, " + name + "! Your account is created. Next, complete your identity verification (KYC)...");
             setTimeout(() => { window.location.href = "kyc.html"; }, 1200);
         });
     </script>
