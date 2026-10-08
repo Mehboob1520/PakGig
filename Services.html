@@ -19,7 +19,7 @@
             
             <div class="flex-1 max-w-md relative hidden sm:block">
                 <input type="text" id="searchInput" oninput="handleSearch(event)" placeholder="Search services (Web, Logo, SEO)..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-emerald-600 shadow-sm">
-                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <svg class="w-4 h-4 text-gray-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <div id="suggestionsDropdown" class="hidden absolute left-0 right-0 top-11 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto"></div>
             </div>
 
@@ -39,10 +39,15 @@
         </div>
     </header>
 
+    <!-- Mobile search bar (phones only) -->
+    <div class="sm:hidden bg-white border-b border-gray-200 px-4 py-2">
+        <input type="text" id="searchInputMobile" oninput="handleSearch(event)" placeholder="Search services (Web, Logo, SEO)..." class="w-full px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-emerald-600">
+    </div>
+
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Explore All Services</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Explore All Services</h1>
             <p class="text-gray-600">Find top Pakistani freelance talent for your next project with secure Escrow payment.</p>
         </div>
 
@@ -62,7 +67,14 @@
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 text-sm py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-4 text-center">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-3">
+            <nav class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
+                <a href="privacy.html" class="hover:text-white hover:underline">Privacy Policy</a>
+                <a href="terms.html" class="hover:text-white hover:underline">Terms &amp; Conditions</a>
+                <a href="refund-policy.html" class="hover:text-white hover:underline">Cancellation, Return &amp; Refund Policy</a>
+                <a href="ownership-statement.html" class="hover:text-white hover:underline">Ownership Statement</a>
+                <a href="contact.html" class="hover:text-white hover:underline">Contact Us</a>
+            </nav>
             <p>&copy; 2026 PakGig Marketplace. All rights reserved. | JazzCash • EasyPaisa • Bank Transfer Payouts</p>
         </div>
     </footer>
@@ -84,7 +96,7 @@
           <div><b>Account Title:</b> Mehboob Alam</div>
           <div><b>EasyPaisa:</b> 03444466927</div>
           <div><b>JazzCash:</b> 03327002220</div>
-          <div><b>United Bank (UBL):</b> PK98UNIL0109000260771982</div>
+          <div style="word-break:break-all;"><b>United Bank (UBL):</b> PK98UNIL0109000260771982</div>
         </div>
 
         <!-- Submission Form -->
@@ -163,6 +175,31 @@
           }
         });
       }
+
+      // Text search (desktop and mobile search boxes share the same text)
+      function applySearch(q) {
+        q = (q || "").toLowerCase().trim();
+        document.querySelectorAll('.service-card').forEach(card => {
+          card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? 'flex' : 'none';
+        });
+      }
+      function handleSearch(e) {
+        const v = e.target.value;
+        ['searchInput', 'searchInputMobile'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el && el !== e.target) el.value = v;
+        });
+        applySearch(v);
+      }
+      window.applySearchFromUrl = function () {
+        const q = new URLSearchParams(window.location.search).get('search');
+        if (!q) return;
+        ['searchInput', 'searchInputMobile'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = q;
+        });
+        applySearch(q);
+      };
 
 </script>
 <script>
@@ -314,7 +351,7 @@ form.addEventListener("submit", async (e) => {
 });
 
 // ---------- load ----------
-listGigs().then((data) => { gigs = data; renderGigs(); })
+listGigs().then((data) => { gigs = data; renderGigs(); if (window.applySearchFromUrl) window.applySearchFromUrl(); })
     .catch(() => {
         $("servicesGrid").innerHTML = `<p class="col-span-full text-center text-sm text-red-600 py-12">Could not load services. Check your connection and try again.</p>`;
     });
