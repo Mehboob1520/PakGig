@@ -33,7 +33,7 @@
             <div>
                 <div class="flex justify-between items-center mb-1">
                     <label class="text-xs font-semibold text-gray-700">Password</label>
-                    <button type="button" id="forgotBtn" class="text-xs text-emerald-700 hover:underline">Forgot password?</button>
+                    <button type="button" id="forgotBtn" class="text-xs text-emerald-700 hover:underline disabled:opacity-60 disabled:cursor-not-allowed">Forgot password?</button>
                 </div>
                 <input type="password" id="loginPassword" required class="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="••••••••">
             </div>
@@ -63,6 +63,7 @@
 
         const alertBox = document.getElementById("alertBox");
         const loginBtn = document.getElementById("loginBtn");
+        const forgotBtn = document.getElementById("forgotBtn");
         const emailInput = document.getElementById("loginEmail");
         const passwordInput = document.getElementById("loginPassword");
 
@@ -109,17 +110,32 @@
             setTimeout(() => { window.location.href = next; }, 600);
         });
 
-        document.getElementById("forgotBtn").addEventListener("click", async () => {
+        forgotBtn.addEventListener("click", async () => {
             const email = emailInput.value.trim();
             if (!email) {
                 showAlert("error", "Enter your email above first, then press Forgot password.");
+                emailInput.focus();
                 return;
             }
-            const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+            forgotBtn.disabled = true;
+            forgotBtn.textContent = "Sending...";
+
+            // The reset link in the email must open our reset-password page.
+            const redirectTo = new URL("reset-password.html", window.location.href).href;
+            const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+
             if (error) {
                 showAlert("error", friendlyAuthError(error.message));
+                forgotBtn.disabled = false;
+                forgotBtn.textContent = "Forgot password?";
             } else {
-                showAlert("success", "If an account exists for this email, a reset link has been sent.");
+                showAlert("success", "If an account exists for this email, a reset link has been sent. Please check your inbox and spam folder.");
+                // Short pause before allowing another request (avoids email rate limits)
+                setTimeout(() => {
+                    forgotBtn.disabled = false;
+                    forgotBtn.textContent = "Forgot password?";
+                }, 30000);
             }
         });
     </script>
