@@ -11,7 +11,9 @@ export function friendlyAuthError(message) {
     if (m.includes("password should be at least")) return "Password must be at least 6 characters long.";
     if (m.includes("invalid email") || m.includes("unable to validate email")) return "That email address doesn't look valid.";
     if (m.includes("email not confirmed")) return "Please verify your email first.";
+    if (m.includes("for security purposes") || m.includes("you can only request this after")) return "Please wait a minute before requesting another email.";
     if (m.includes("rate limit")) return "Too many attempts. Please try again in a little while.";
+    if (m.includes("email address") && m.includes("is invalid")) return "We couldn't send an email to this address right now. Please check the address and try again later, or contact pakgig.support@gmail.com.";
     if (m.includes("has_history")) return "This account can't be deleted because it has order or withdrawal records.";
     if (m.includes("kyc_required")) return "Please complete your identity verification (KYC) first.";
     return message || "Something went wrong. Please try again.";
