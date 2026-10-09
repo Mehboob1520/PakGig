@@ -89,14 +89,18 @@
                 return;
             }
 
-            // KYC is mandatory: anyone (except admins) without an approved
-            // KYC goes straight to the verification page.
+            // Admins go straight to the admin panel. KYC is mandatory for
+            // everyone else: without an approved KYC they go to verification.
+            // (Admin pages re-check the role in the database, so this redirect
+            // is only a convenience, not a security check.)
             let next = "Services.html";
             try {
                 const { data: profile } = await supabase
                     .from("profiles").select("role, kyc_status")
                     .eq("id", data.user.id).single();
-                if (profile && profile.role !== "admin" && profile.kyc_status !== "approved") {
+                if (profile && profile.role === "admin") {
+                    next = "admin.html";
+                } else if (profile && profile.kyc_status !== "approved") {
                     next = "kyc.html";
                 }
             } catch (err) { /* fall back to Services.html; pages gate KYC themselves */ }
