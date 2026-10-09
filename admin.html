@@ -48,13 +48,13 @@
         </header>
 
         <!-- Tab bar (phones) -->
-        <nav id="mobileNav" class="md:hidden bg-white border-b border-gray-100 px-3 py-2 flex gap-2 overflow-x-auto whitespace-nowrap text-xs">
-            <button data-tab="dashboard" class="navBtn px-3 py-1.5 rounded-full font-semibold bg-emerald-50 text-emerald-700">📊 Dashboard</button>
-            <button data-tab="users" class="navBtn px-3 py-1.5 rounded-full font-medium text-gray-600 bg-gray-50">👥 Users</button>
-            <button data-tab="orders" class="navBtn px-3 py-1.5 rounded-full font-medium text-gray-600 bg-gray-50">📦 Orders</button>
-            <button data-tab="disputes" class="navBtn px-3 py-1.5 rounded-full font-medium text-gray-600 bg-gray-50">⚖️ Disputes</button>
-            <button data-tab="transactions" class="navBtn px-3 py-1.5 rounded-full font-medium text-gray-600 bg-gray-50">💰 Transactions</button>
-            <button data-tab="messages" class="navBtn px-3 py-1.5 rounded-full font-medium text-gray-600 bg-gray-50">✉️ Messages</button>
+        <nav id="mobileNav" class="md:hidden bg-white border-b border-gray-100 px-3 py-2 flex gap-2 overflow-x-auto text-xs">
+            <button data-tab="dashboard" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-semibold bg-emerald-50 text-emerald-700">Dashboard</button>
+            <button data-tab="users" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-medium text-gray-600">Users</button>
+            <button data-tab="orders" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-medium text-gray-600">Orders</button>
+            <button data-tab="disputes" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-medium text-gray-600">Disputes</button>
+            <button data-tab="transactions" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-medium text-gray-600">Transactions</button>
+            <button data-tab="messages" class="navBtn shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full border border-gray-200 font-medium text-gray-600">Messages</button>
         </nav>
 
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
@@ -159,15 +159,11 @@
                 </div>
             </section>
 
-            <!-- ===== MESSAGES TAB (Contact page) ===== -->
+            <!-- ===== MESSAGES TAB (Contact page messages) ===== -->
             <section id="tab-messages" class="hidden space-y-4">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs text-gray-500">Messages sent from the Contact page (newest first).</p>
-                    <button type="button" id="refreshMessages" class="text-xs font-semibold text-emerald-700 hover:underline">Refresh</button>
-                </div>
-                <div id="messagesList" class="space-y-3"></div>
-                <div id="messagesEmpty" class="hidden text-center py-12 bg-white rounded-2xl border border-gray-100">
-                    <p class="text-sm text-gray-500">No messages yet.</p>
+                <div id="contactList" class="space-y-3"></div>
+                <div id="contactEmpty" class="hidden text-center py-12 bg-white rounded-2xl border border-gray-100">
+                    <p class="text-sm text-gray-500">No contact messages yet.</p>
                 </div>
             </section>
         </main>
@@ -263,9 +259,10 @@ function switchTab(tab) {
         btn.classList.toggle("text-gray-600", !active);
     });
 
-    const titles = { dashboard: "Dashboard", users: "Users", orders: "Orders", disputes: "Disputes", transactions: "Transactions", messages: "Messages" };
+    const titles = { dashboard: "Dashboard", users: "Users", orders: "Orders", disputes: "Disputes", transactions: "Transactions", messages: "Contact Messages" };
     $("pageTitle").textContent = titles[tab];
-    if (tab === "messages") loadMessages();
+
+    if (tab === "messages") loadContactMessages();
 }
 
 function onNavClick(e) {
@@ -548,18 +545,16 @@ $("txTableBody").addEventListener("click", async (e) => {
     }
 });
 
-// ---------- Contact messages ----------
-async function loadMessages() {
-    const list = $("messagesList");
-    const empty = $("messagesEmpty");
+// ---------- Contact messages (from the Contact page) ----------
+async function loadContactMessages() {
+    const list = $("contactList");
+    const empty = $("contactEmpty");
     const { data, error } = await supabase
         .from("contact_messages")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
     if (error) {
-        list.innerHTML = "";
-        empty.classList.add("hidden");
         showAlert("error", "Could not load contact messages. Please try again.");
         return;
     }
@@ -575,12 +570,11 @@ async function loadMessages() {
                 <p class="font-semibold text-gray-900 text-sm">${esc(m.name)}</p>
                 <p class="text-[11px] text-gray-400">${esc(new Date(m.created_at).toLocaleString())}</p>
             </div>
-            <p class="text-xs"><a href="mailto:${esc(m.email)}" class="text-emerald-700 hover:underline">${esc(m.email)}</a></p>
+            <p class="text-xs"><a href="mailto:${esc(m.email)}" class="text-emerald-700 hover:underline break-all">${esc(m.email)}</a></p>
             ${m.subject ? `<p class="text-xs font-semibold text-gray-700">${esc(m.subject)}</p>` : ""}
             <p class="text-sm text-gray-600 whitespace-pre-wrap break-words">${esc(m.message)}</p>
         </div>`).join("");
 }
-$("refreshMessages").addEventListener("click", loadMessages);
 
 // ---------- Init ----------
 function renderAll() {

@@ -137,10 +137,10 @@
             }
 
             // If email verification is switched on, there is no session yet:
-            // the user must verify the email first, then sign in.
+            // tell the user to verify first, then sign in.
             if (!data || !data.session) {
                 showAlert("success", "Account created! We sent a verification link to " + email + ". Please verify your email (check your spam folder too), then sign in to complete your identity verification (KYC).");
-                submitBtn.textContent = "Account created";
+                submitBtn.textContent = "Check your email";
                 return;
             }
 
