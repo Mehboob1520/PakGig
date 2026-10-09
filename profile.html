@@ -18,6 +18,7 @@
             <a href="index.html" class="text-xl font-extrabold text-emerald-700 tracking-tight">Pak<span class="text-gray-900">Gig</span></a>
             <div class="flex items-center gap-5 text-sm font-medium text-gray-600">
                 <a href="Services.html" class="hover:text-emerald-700">Services</a>
+                <a href="dashboard.html" class="hover:text-emerald-700">Dashboard</a>
                 <a href="order.html" class="hover:text-emerald-700">Orders</a>
                 <a href="profile.html" class="text-emerald-700">Profile</a>
                 <a href="login.html" data-logout class="hover:text-red-600">Logout</a>
@@ -33,23 +34,15 @@
         <!-- Profile Header Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <!-- Avatar -->
-                <div class="relative shrink-0">
-                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile photo" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
-                    <label for="avatarInput" class="absolute bottom-0 right-0 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer shadow-md text-xs">
-                        ✎
-                    </label>
-                    <input type="file" id="avatarInput" accept="image/*" class="hidden">
+                <!-- Avatar (generated from the name) -->
+                <div class="shrink-0">
+                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile picture" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
                 </div>
 
                 <!-- Basic info -->
                 <div class="flex-1 text-center sm:text-left space-y-1">
                     <h1 id="displayName" class="text-xl font-bold text-gray-900">Your Name</h1>
                     <p id="displayTagline" class="text-sm text-gray-500">Add a short professional tagline</p>
-                    <div class="flex items-center justify-center sm:justify-start gap-1 text-amber-500 text-sm pt-1">
-                        <span>★★★★★</span>
-                        <span class="text-gray-500 text-xs">(<span id="reviewCount">0</span> reviews)</span>
-                    </div>
                     <p class="text-xs text-gray-400 pt-1">Member since <span id="memberSince">—</span></p>
                 </div>
 
@@ -178,6 +171,10 @@
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
+        function setAvatar(name) {
+            $("avatarPreview").src = "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(name || "User") + "&backgroundColor=047857&textColor=ffffff";
+        }
+
         function render() {
             $("fullName").value = saved.fullName || "";
             $("tagline").value  = saved.tagline  || "";
@@ -188,7 +185,7 @@
             $("bio").value      = saved.bio      || "";
 
             $("displayName").textContent    = saved.fullName || "Your Name";
-            $("avatarPreview").src = "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(saved.fullName || "User") + "&backgroundColor=047857&textColor=ffffff";
+            setAvatar(saved.fullName);
             $("displayTagline").textContent = saved.tagline  || "Add a short professional tagline";
 
             $("memberSince").textContent = currentUser.created_at
@@ -230,15 +227,6 @@
             render();
         }
 
-        // Avatar preview (client-side only; upload to storage separately)
-        $("avatarInput").addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => { $("avatarPreview").src = ev.target.result; };
-            reader.readAsDataURL(file);
-        });
-
         $("profileForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const saveBtn = $("saveBtn");
@@ -265,6 +253,7 @@
                 await updateMyProfile(currentUser, updates);
                 saved = Object.assign({}, saved, updates);
                 $("displayName").textContent = fullName;
+                setAvatar(fullName);
                 $("displayTagline").textContent = updates.tagline || "Add a short professional tagline";
                 showAlert("success", "Profile updated successfully.");
             } catch (err) {
