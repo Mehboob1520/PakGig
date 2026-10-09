@@ -31,7 +31,7 @@
             <div class="flex-1 max-w-md relative hidden sm:block">
                 <div class="relative">
                     <input type="text" id="headerSearchInput" oninput="handleHomeSearch(event, 'headerDropdown')" placeholder="What service are you looking for today?" class="w-full pl-4 pr-10 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <button onclick="executeSearch('headerSearchInput')" class="absolute right-2 top-2 text-gray-400 hover:text-emerald-700">
+                    <button onclick="executeSearch('headerSearchInput')" class="absolute right-2 top-2 text-gray-400 hover:text-emerald-700" aria-label="Search">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
                 </div>
@@ -113,7 +113,7 @@
                 <ul class="text-xs space-y-2 text-emerald-100">
                     <li class="flex items-center gap-2">✓ Flat 8% platform service fee</li>
                     <li class="flex items-center gap-2">✓ JazzCash / EasyPaisa / Local Bank Payouts</li>
-                    <li class="flex items-center gap-2">✓ Verified Freelancers & Instant Support</li>
+                    <li class="flex items-center gap-2">✓ Identity-Verified Freelancers & Buyers</li>
                 </ul>
             </div>
         </div>
@@ -187,6 +187,14 @@
         function quickSearch(query) {
             window.location.href = `Services.html?search=${encodeURIComponent(query)}`;
         }
+
+        // Pressing Enter in either search box runs the search
+        ['headerSearchInput', 'heroSearchInput'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); executeSearch(id); }
+            });
+        });
     </script>
 <script>
   // Direct trigger for 'Order Now' or 'Hire' buttons
