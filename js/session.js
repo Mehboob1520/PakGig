@@ -124,3 +124,7 @@ export async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "index.html";
 }
+
+// Brand: swap the plain "PakGig" header text for the logo (see brand.js).
+// If this fails for any reason the page must still work, so errors are ignored.
+import("./brand.js").catch(function () {});
