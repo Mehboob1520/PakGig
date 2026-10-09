@@ -34,9 +34,9 @@
         <!-- Profile Header Card -->
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <!-- Avatar (generated from the name) -->
-                <div class="shrink-0">
-                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile picture" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
+                <!-- Avatar -->
+                <div class="relative shrink-0">
+                    <img id="avatarPreview" src="https://api.dicebear.com/7.x/initials/svg?seed=User&backgroundColor=047857&textColor=ffffff" alt="Profile photo" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100">
                 </div>
 
                 <!-- Basic info -->
@@ -171,10 +171,6 @@
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
-        function setAvatar(name) {
-            $("avatarPreview").src = "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(name || "User") + "&backgroundColor=047857&textColor=ffffff";
-        }
-
         function render() {
             $("fullName").value = saved.fullName || "";
             $("tagline").value  = saved.tagline  || "";
@@ -185,7 +181,7 @@
             $("bio").value      = saved.bio      || "";
 
             $("displayName").textContent    = saved.fullName || "Your Name";
-            setAvatar(saved.fullName);
+            $("avatarPreview").src = "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(saved.fullName || "User") + "&backgroundColor=047857&textColor=ffffff";
             $("displayTagline").textContent = saved.tagline  || "Add a short professional tagline";
 
             $("memberSince").textContent = currentUser.created_at
@@ -253,7 +249,6 @@
                 await updateMyProfile(currentUser, updates);
                 saved = Object.assign({}, saved, updates);
                 $("displayName").textContent = fullName;
-                setAvatar(fullName);
                 $("displayTagline").textContent = updates.tagline || "Add a short professional tagline";
                 showAlert("success", "Profile updated successfully.");
             } catch (err) {
