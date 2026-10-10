@@ -6,6 +6,7 @@ import { supabase } from "./supabaseClient.js";
 // Turns a raw Supabase auth error message into a friendly line.
 export function friendlyAuthError(message) {
     const m = (message || "").toLowerCase();
+    if (m.includes("banned") || m.includes("user_banned")) return "Your account has been suspended. Please contact pakgig.support@gmail.com.";
     if (m.includes("invalid login credentials")) return "Incorrect email or password.";
     if (m.includes("user already registered")) return "An account with this email already exists.";
     if (m.includes("password should be at least")) return "Password must be at least 6 characters long.";
@@ -39,6 +40,7 @@ export async function whenAuthReady() {
 // For pages that require a logged-in user: redirects to login.html (or
 // index.html, if adminOnly and the user isn't an admin) and otherwise
 // resolves with { user }.
+// Suspended accounts are signed out and sent to the login page.
 // KYC: every buyer and seller must have an approved KYC. Pages that call
 // requireLogin() are sent to kyc.html until it is approved (admins are
 // exempt). Only kyc.html and profile.html pass { skipKyc: true }.
@@ -51,7 +53,12 @@ export async function requireLogin(opts = {}) {
     }
     const user = withAliases(session.user);
     const { data: profile } = await supabase
-        .from("profiles").select("role, kyc_status").eq("id", user.id).single();
+        .from("profiles").select("role, kyc_status, status").eq("id", user.id).single();
+    if (profile && profile.status === "suspended") {
+        await supabase.auth.signOut();
+        window.location.href = "login.html?suspended=1";
+        return new Promise(() => {});
+    }
     if (opts.adminOnly) {
         if (!profile || profile.role !== "admin") {
             window.location.href = "index.html";
@@ -103,15 +110,21 @@ async function updateNavbar(session) {
         return;
     }
 
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, status")
+        .eq("id", session.user.id)
+        .single();
+
+    // A suspended user is signed out right away (the navbar then shows Sign In).
+    if (profile && profile.status === "suspended") {
+        await supabase.auth.signOut();
+        return;
+    }
+
     authButtons.classList.add("hidden");
     profileMenu.classList.remove("hidden");
     profileMenu.classList.add("flex");
-
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", session.user.id)
-        .single();
 
     const name = (profile && profile.full_name) || session.user.email || "User";
     const avatar = document.getElementById("navAvatar");

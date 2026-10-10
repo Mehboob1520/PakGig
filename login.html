@@ -70,6 +70,11 @@
             alertBox.textContent = message;
         }
 
+        // A suspended user who was signed out by another page lands here.
+        if (new URLSearchParams(window.location.search).get("suspended") === "1") {
+            showAlert("error", "Your account has been suspended. Please contact pakgig.support@gmail.com.");
+        }
+
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -96,8 +101,15 @@
             let next = "Services.html";
             try {
                 const { data: profile } = await supabase
-                    .from("profiles").select("role, kyc_status")
+                    .from("profiles").select("role, kyc_status, status")
                     .eq("id", data.user.id).single();
+                if (profile && profile.status === "suspended") {
+                    await supabase.auth.signOut();
+                    showAlert("error", "Your account has been suspended. Please contact pakgig.support@gmail.com.");
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = "Sign In";
+                    return;
+                }
                 if (profile && profile.role === "admin") {
                     next = "admin.html";
                 } else if (profile && profile.kyc_status !== "approved") {
