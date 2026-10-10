@@ -35,7 +35,6 @@
         <span id="navName" class="hidden md:block text-sm font-semibold text-gray-700 group-hover:text-emerald-700">Profile</span>
     </a>
 </div>
-            </div>
         </div>
     </header>
 
@@ -215,6 +214,7 @@
 </script>
     <script type="module">
 import { whenAuthReady } from "./js/session.js";
+import { supabase } from "./js/supabaseClient.js";
 import { listGigs, createOrder, getMyProfile } from "./js/data.js";
 import { esc, money, CATEGORIES } from "./js/ledger.js";
 
@@ -227,7 +227,16 @@ const categoryStyle = {
 };
 
 let gigs = [];
+let proSet = new Set();
 let selectedGig = null;
+
+// Sellers with a Pro membership get a PRO tag on their gigs.
+async function loadProSellers() {
+    try {
+        const { data } = await supabase.rpc("pro_seller_ids");
+        proSet = new Set((data || []).map((x) => String(x)));
+    } catch (e) { /* no tags if this fails */ }
+}
 
 function renderGigs() {
     const grid = $("servicesGrid");
@@ -244,6 +253,9 @@ function renderGigs() {
     grid.innerHTML = gigs.map((g) => {
         const style = categoryStyle[g.category] || categoryStyle.web;
         const label = CATEGORIES[g.category] || "Service";
+        const proTag = proSet.has(String(g.sellerId))
+            ? ` <span title="Pro seller" class="inline-flex items-center align-middle ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">&#9733; PRO</span>`
+            : "";
         return `
         <div class="service-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between" data-category="${esc(g.category)}">
             <div>
@@ -252,7 +264,7 @@ function renderGigs() {
                     <span class="text-xs font-semibold ${style.label} uppercase tracking-wider">${esc(label)}</span>
                     <h3 class="font-bold text-gray-900 text-lg mt-1">${esc(g.title)}</h3>
                     <p class="text-xs text-gray-500 mt-2">${esc(g.description)}</p>
-                    <p class="text-xs text-gray-400 mt-2">by ${esc(g.sellerName)}</p>
+                    <p class="text-xs text-gray-400 mt-2">by ${esc(g.sellerName)}${proTag}</p>
                 </div>
             </div>
             <div class="p-5 pt-0 border-t border-gray-100 mt-4 flex items-center justify-between">
@@ -351,7 +363,8 @@ form.addEventListener("submit", async (e) => {
 });
 
 // ---------- load ----------
-listGigs().then((data) => { gigs = data; renderGigs(); if (window.applySearchFromUrl) window.applySearchFromUrl(); })
+Promise.all([listGigs(), loadProSellers()])
+    .then(([data]) => { gigs = data; renderGigs(); if (window.applySearchFromUrl) window.applySearchFromUrl(); })
     .catch(() => {
         $("servicesGrid").innerHTML = `<p class="col-span-full text-center text-sm text-red-600 py-12">Could not load services. Check your connection and try again.</p>`;
     });
