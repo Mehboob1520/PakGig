@@ -56,6 +56,8 @@
         import { supabase } from "./js/supabaseClient.js";
         import { friendlyAuthError } from "./js/session.js";
 
+        const SUSPENDED_MSG = "Your account has been suspended due to a violation of our Terms & Conditions. If you believe this is a mistake, please contact pakgig.support@gmail.com.";
+
         const alertBox = document.getElementById("alertBox");
         const loginBtn = document.getElementById("loginBtn");
         const forgotBtn = document.getElementById("forgotBtn");
@@ -72,7 +74,7 @@
 
         // A suspended user who was signed out by another page lands here.
         if (new URLSearchParams(window.location.search).get("suspended") === "1") {
-            showAlert("error", "Your account has been suspended. Please contact pakgig.support@gmail.com.");
+            showAlert("error", SUSPENDED_MSG);
         }
 
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -105,7 +107,7 @@
                     .eq("id", data.user.id).single();
                 if (profile && profile.status === "suspended") {
                     await supabase.auth.signOut();
-                    showAlert("error", "Your account has been suspended. Please contact pakgig.support@gmail.com.");
+                    showAlert("error", SUSPENDED_MSG);
                     loginBtn.disabled = false;
                     loginBtn.textContent = "Sign In";
                     return;

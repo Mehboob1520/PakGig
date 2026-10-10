@@ -6,7 +6,7 @@ import { supabase } from "./supabaseClient.js";
 // Turns a raw Supabase auth error message into a friendly line.
 export function friendlyAuthError(message) {
     const m = (message || "").toLowerCase();
-    if (m.includes("banned") || m.includes("user_banned")) return "Your account has been suspended. Please contact pakgig.support@gmail.com.";
+    if (m.includes("banned") || m.includes("user_banned")) return "Your account has been suspended due to a violation of our Terms & Conditions. If you believe this is a mistake, please contact pakgig.support@gmail.com.";
     if (m.includes("invalid login credentials")) return "Incorrect email or password.";
     if (m.includes("user already registered")) return "An account with this email already exists.";
     if (m.includes("password should be at least")) return "Password must be at least 6 characters long.";
