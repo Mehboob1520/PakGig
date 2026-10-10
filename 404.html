@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PakGig - Page Not Found</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -57,9 +58,9 @@
         document.getElementById("searchForm").addEventListener("submit", (e) => {
             e.preventDefault();
             const q = document.getElementById("searchInput").value.trim();
-            // Adjust the query param name to match whatever Services.html expects.
-            window.location.href = "Services.html" + (q ? "?q=" + encodeURIComponent(q) : "");
+            window.location.href = "Services.html" + (q ? "?search=" + encodeURIComponent(q) : "");
         });
     </script>
+    <script src="js/brand.js"></script>
 </body>
 </html>
