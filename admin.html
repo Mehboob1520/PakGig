@@ -169,6 +169,41 @@
         </main>
     </div>
 
+    <!-- Suspend Account Modal -->
+    <div id="suspendModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 px-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs text-gray-400" id="suspendUserName">User</p>
+                    <h3 class="text-base font-bold text-gray-900">Suspend account</h3>
+                </div>
+                <button type="button" id="closeSuspendModal" class="text-gray-400 hover:text-gray-700 text-lg leading-none">&times;</button>
+            </div>
+
+            <p class="text-xs text-gray-500">The user will no longer be able to sign in. They will see this reason on the sign-in page:</p>
+            <p class="text-xs font-medium text-gray-700 bg-gray-50 rounded-lg p-3">"Your account has been suspended due to <span id="reasonPreview" class="text-red-700"></span>."</p>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Reason</label>
+                <select id="suspendReason" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                    <option value="violation of our Terms & Conditions">Violation of our Terms &amp; Conditions</option>
+                    <option value="suspected fraud or payment abuse">Suspected fraud or payment abuse</option>
+                    <option value="abusive or inappropriate behavior">Abusive or inappropriate behavior</option>
+                    <option value="submitting false or fake identity documents">False or fake identity documents</option>
+                    <option value="__other__">Other (write your own)</option>
+                </select>
+                <input type="text" id="suspendCustom" maxlength="150" class="hidden mt-2 w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Finish the sentence, e.g. repeated complaints from buyers">
+            </div>
+
+            <div id="suspendModalAlert" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" id="cancelSuspendBtn" class="flex-1 py-2.5 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="button" id="confirmSuspendBtn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-md transition disabled:opacity-60">Suspend</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Dispute Resolution Modal -->
     <div id="disputeModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 px-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
@@ -209,7 +244,7 @@
     <script type="module">
 import { requireLogin, bindLogout } from "./js/session.js";
 import { supabase } from "./js/supabaseClient.js";
-import { watchAllOrders, watchAllWithdrawals, listUsers, setUserStatus, orderAction, markWithdrawalPaid, formatDate } from "./js/data.js";
+import { watchAllOrders, watchAllWithdrawals, listUsers, orderAction, markWithdrawalPaid, formatDate } from "./js/data.js";
 import { esc, money, shortId, feeFor, STATUS_META, sellerTotals, availableActions } from "./js/ledger.js";
 import { listProIds, adminSetPro, proErrorMessage } from "./js/pro.js";
 
@@ -232,6 +267,7 @@ let orders = [];
 let withdrawals = [];
 let proIds = new Set();
 let activeDisputeId = null;
+let suspendTarget = null;
 
 function showAlert(type, msg) {
     const box = $("alertBox");
@@ -245,6 +281,15 @@ function showAlert(type, msg) {
 
 const badge = (meta) => `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border ${meta.badge}">${esc(meta.label)}</span>`;
 const openDisputes = () => orders.filter((o) => o.disputed && o.disputeStatus === "open");
+
+// Suspend / reactivate through the database function (it also blocks or
+// restores the user's sign-in and stores the reason shown on the sign-in page).
+async function setStatus(userId, status, reason) {
+    const { error } = await supabase.rpc("admin_set_user_status", {
+        p_user: userId, p_status: status, p_reason: reason || null
+    });
+    if (error) throw error;
+}
 
 // ---------- Tab switching ----------
 function switchTab(tab) {
@@ -351,21 +396,89 @@ $("usersTableBody").addEventListener("click", async (e) => {
     if (!btn) return;
     const user = users.find((u) => u.id === btn.dataset.id);
     if (!user) return;
-    const willSuspend = user.status !== "suspended";
     const name = user.fullName || user.email || "this user";
-    if (willSuspend && !confirm(`Suspend ${name}? They will no longer be able to place orders, send messages or create gigs.`)) return;
 
+    // Suspending asks for a reason first (modal below).
+    if (user.status !== "suspended") {
+        openSuspendModal(user);
+        return;
+    }
+
+    // Reactivating is a single confirmation.
+    if (!confirm(`Reactivate ${name}? They will be able to sign in and use PakGig again.`)) return;
     try {
-        await setUserStatus(user.id, willSuspend ? "suspended" : "active");
-        user.status = willSuspend ? "suspended" : "active";
+        await setStatus(user.id, "active");
+        user.status = "active";
         renderUsers($("userSearch").value);
-        showAlert("success", `${name} has been ${willSuspend ? "suspended" : "reactivated"}.`);
+        showAlert("success", `${name} has been reactivated.`);
     } catch (err) {
         showAlert("error", "Could not update this user. Please try again.");
     }
 });
 
 $("userSearch").addEventListener("input", (e) => renderUsers(e.target.value));
+
+// ---------- Suspend modal ----------
+function currentSuspendReason() {
+    const sel = $("suspendReason").value;
+    if (sel === "__other__") return $("suspendCustom").value.trim();
+    return sel;
+}
+
+function refreshReasonPreview() {
+    const isOther = $("suspendReason").value === "__other__";
+    $("suspendCustom").classList.toggle("hidden", !isOther);
+    $("reasonPreview").textContent = currentSuspendReason() || "...";
+}
+
+function openSuspendModal(user) {
+    suspendTarget = user;
+    $("suspendUserName").textContent = user.fullName || user.email || "User";
+    $("suspendReason").value = "violation of our Terms & Conditions";
+    $("suspendCustom").value = "";
+    $("suspendModalAlert").className = "hidden";
+    $("confirmSuspendBtn").disabled = false;
+    refreshReasonPreview();
+    $("suspendModal").classList.remove("hidden");
+    $("suspendModal").classList.add("flex");
+}
+
+function closeSuspendModal() {
+    $("suspendModal").classList.add("hidden");
+    $("suspendModal").classList.remove("flex");
+    suspendTarget = null;
+}
+
+$("suspendReason").addEventListener("change", refreshReasonPreview);
+$("suspendCustom").addEventListener("input", refreshReasonPreview);
+$("closeSuspendModal").addEventListener("click", closeSuspendModal);
+$("cancelSuspendBtn").addEventListener("click", closeSuspendModal);
+$("suspendModal").addEventListener("click", (e) => { if (e.target.id === "suspendModal") closeSuspendModal(); });
+
+$("confirmSuspendBtn").addEventListener("click", async () => {
+    if (!suspendTarget) return;
+    const reason = currentSuspendReason();
+    const box = $("suspendModalAlert");
+    if (!reason) {
+        box.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+        box.textContent = "Please write the reason.";
+        return;
+    }
+    const user = suspendTarget;
+    const name = user.fullName || user.email || "this user";
+    $("confirmSuspendBtn").disabled = true;
+    try {
+        await setStatus(user.id, "suspended", reason);
+        user.status = "suspended";
+        closeSuspendModal();
+        renderUsers($("userSearch").value);
+        showAlert("success", `${name} has been suspended (${reason}).`);
+    } catch (err) {
+        $("confirmSuspendBtn").disabled = false;
+        box.className = "p-3 rounded-lg text-xs font-medium border block bg-red-50 border-red-200 text-red-800";
+        box.textContent = "Could not suspend this user. Please try again.";
+    }
+});
 
 // ---------- Orders ----------
 function renderOrdersTable() {

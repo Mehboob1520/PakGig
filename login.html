@@ -56,7 +56,10 @@
         import { supabase } from "./js/supabaseClient.js";
         import { friendlyAuthError } from "./js/session.js";
 
-        const SUSPENDED_MSG = "Your account has been suspended due to a violation of our Terms & Conditions. If you believe this is a mistake, please contact pakgig.support@gmail.com.";
+        const DEFAULT_REASON = "violation of our Terms & Conditions";
+        function suspendedMsg(reason) {
+            return "Your account has been suspended due to " + (reason || DEFAULT_REASON) + ". If you believe this is a mistake, please contact pakgig.support@gmail.com.";
+        }
 
         const alertBox = document.getElementById("alertBox");
         const loginBtn = document.getElementById("loginBtn");
@@ -74,7 +77,9 @@
 
         // A suspended user who was signed out by another page lands here.
         if (new URLSearchParams(window.location.search).get("suspended") === "1") {
-            showAlert("error", SUSPENDED_MSG);
+            let savedReason = null;
+            try { savedReason = sessionStorage.getItem("pakgigSuspendedReason"); sessionStorage.removeItem("pakgigSuspendedReason"); } catch (e) {}
+            showAlert("error", suspendedMsg(savedReason));
         }
 
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -84,13 +89,25 @@
             loginBtn.textContent = "Authenticating...";
             alertBox.className = "hidden";
 
+            const email = emailInput.value.trim();
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: emailInput.value.trim(),
+                email: email,
                 password: passwordInput.value
             });
 
             if (error) {
-                showAlert("error", friendlyAuthError(error.message));
+                const text = String(error.message || "").toLowerCase();
+                if (text.includes("banned")) {
+                    // The account is suspended: look up the reason the admin chose.
+                    let reason = null;
+                    try {
+                        const res = await supabase.rpc("suspension_notice", { p_email: email });
+                        reason = res && res.data ? res.data : null;
+                    } catch (err) {}
+                    showAlert("error", suspendedMsg(reason));
+                } else {
+                    showAlert("error", friendlyAuthError(error.message));
+                }
                 loginBtn.disabled = false;
                 loginBtn.textContent = "Sign In";
                 return;
@@ -103,11 +120,11 @@
             let next = "Services.html";
             try {
                 const { data: profile } = await supabase
-                    .from("profiles").select("role, kyc_status, status")
+                    .from("profiles").select("role, kyc_status, status, suspension_reason")
                     .eq("id", data.user.id).single();
                 if (profile && profile.status === "suspended") {
                     await supabase.auth.signOut();
-                    showAlert("error", SUSPENDED_MSG);
+                    showAlert("error", suspendedMsg(profile.suspension_reason));
                     loginBtn.disabled = false;
                     loginBtn.textContent = "Sign In";
                     return;

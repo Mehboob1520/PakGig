@@ -53,8 +53,10 @@ export async function requireLogin(opts = {}) {
     }
     const user = withAliases(session.user);
     const { data: profile } = await supabase
-        .from("profiles").select("role, kyc_status, status").eq("id", user.id).single();
+        .from("profiles").select("role, kyc_status, status, suspension_reason").eq("id", user.id).single();
     if (profile && profile.status === "suspended") {
+        // Keep the reason so the login page can show it after sign-out.
+        try { sessionStorage.setItem("pakgigSuspendedReason", profile.suspension_reason || ""); } catch (e) {}
         await supabase.auth.signOut();
         window.location.href = "login.html?suspended=1";
         return new Promise(() => {});
